@@ -1,0 +1,1182 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>おかまるパワプロ</title>
+<meta name="theme-color" content="#0c2f6b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="パワプロ">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>html{background:#0c2f6b;-webkit-text-size-adjust:100%}body{margin:0;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);-webkit-tap-highlight-color:transparent}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=M+PLUS+1p:wght@500;700;800&display=swap">
+<style>
+/* Layout: 野球ゲームの選手ステータス画面風。紺のストライプ地に、青い枠の白パネルを縦に積む（単一テーマ） */
+:root{
+  --ground:#0c2f6b; --ground-2:#14469a; --frame:#1d5fd0; --frame-dark:#0f3b8c;
+  --panel:#f6f9ff; --panel-2:#e3ecfb; --ink:#0d1a33; --ink-soft:#4a5d80; --gold:#ffd23a;
+  --rA:#ff5fae; --rB:#e3262d; --rC:#f6cb12; --rD:#f2871b; --rE:#22a845; --rF:#3fc1ec; --rG:#111111;
+  --display:"Dela Gothic One","Hiragino Sans","Yu Gothic",sans-serif;
+  --body:"M PLUS 1p","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{
+  background:var(--ground);
+  background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.045) 0 14px,transparent 14px 28px),linear-gradient(180deg,var(--ground-2),var(--ground));
+  background-attachment:fixed;color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;min-height:100%;
+}
+.wrap{max-width:560px;margin:0 auto;padding-inline:14px;padding-block:14px 40px;display:flex;flex-direction:column;gap:14px}
+.num{font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+
+/* ribbon title */
+.title{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.ribbon{background:linear-gradient(180deg,#ffe470,var(--gold) 55%,#e9a90c);color:var(--ink);font-family:var(--display);font-size:20px;padding:6px 22px 6px 14px;transform:skewX(-12deg);border:2px solid #fff;box-shadow:0 3px 0 rgba(0,0,0,.35)}
+.ribbon span{display:inline-block;transform:skewX(12deg)}
+.monthnav{display:flex;align-items:center;gap:6px;color:#fff}
+.monthnav .m{font-family:var(--display);font-size:15px;min-width:7.2em;text-align:center;text-shadow:0 2px 0 rgba(0,0,0,.4)}
+.navbtn{width:34px;height:34px;border-radius:8px;border:2px solid #fff;background:var(--frame);color:#fff;font-size:18px;line-height:1;box-shadow:0 3px 0 var(--frame-dark)}
+.navbtn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--frame-dark)}
+
+/* panels */
+.panel{background:var(--panel);border:3px solid var(--frame);border-radius:12px;box-shadow:0 0 0 2px #fff inset,0 4px 0 rgba(0,0,0,.35);overflow:hidden}
+.bar-title{background:linear-gradient(180deg,#3a83ec,var(--frame) 60%,var(--frame-dark));color:#fff;font-family:var(--display);font-size:15px;letter-spacing:.06em;padding:7px 14px;display:flex;justify-content:space-between;align-items:center;gap:8px;text-shadow:0 2px 0 rgba(0,0,0,.35)}
+.bar-title small{font-family:var(--body);font-weight:700;font-size:12px;letter-spacing:0;opacity:.95}
+.body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:12px}
+
+.radar svg{width:100%;height:auto;display:block;background:radial-gradient(circle at 50% 52%,#ffffff 0,var(--panel-2) 75%);border-radius:8px}
+
+/* rank letter, game style */
+.rk{font-family:var(--display);font-style:normal;line-height:1;display:inline-block;transform:skewX(-10deg);-webkit-text-stroke:5px #fff;paint-order:stroke fill;text-shadow:0 2px 0 rgba(0,0,0,.25)}
+.rA{color:var(--rA)} .rB{color:var(--rB)} .rC{color:var(--rC)} .rD{color:var(--rD)} .rE{color:var(--rE)} .rF{color:var(--rF)} .rG{color:var(--rG)}
+
+/* status rows */
+.status{display:flex;flex-direction:column;gap:6px}
+.srow{display:grid;grid-template-columns:5.4em 2.4em 3.2em 1fr;align-items:center;gap:8px;background:#fff;border:2px solid var(--panel-2);border-radius:8px;padding:6px 10px 6px 6px}
+.sname{background:linear-gradient(180deg,#2d6fdb,var(--frame-dark));color:#fff;font-weight:800;font-size:13px;text-align:center;border-radius:5px;padding:4px 0}
+.srow .rk{font-size:30px;text-align:center}
+.sval{font-family:var(--display);font-size:20px;text-align:right;color:var(--ink)}
+.gauge-wrap{min-width:0;display:flex;flex-direction:column;gap:2px}
+.gauge{display:grid;grid-template-columns:repeat(20,1fr);gap:1px;height:14px;background:#2a3550;border:2px solid #2a3550;border-radius:3px;padding:1px}
+.gauge i{background:#45506a;border-radius:1px}
+.gnext{font-size:11px;color:var(--ink-soft);font-weight:700;text-align:right}
+.sum-line{font-size:12px;color:var(--ink-soft);font-weight:700;text-align:right}
+
+/* allocation */
+.remain{display:flex;align-items:center;gap:6px;color:#fff;font-weight:700;font-size:12px}
+.remain b{font-family:var(--display);font-weight:400;font-size:20px;color:var(--gold)}
+.remain.done b{color:#7dff9a}
+.alloc{display:flex;flex-direction:column;gap:6px}
+.arow{display:grid;grid-template-columns:5.4em 1fr auto;align-items:center;gap:10px}
+.pips{display:grid;grid-template-columns:repeat(15,1fr);gap:2px;height:12px;min-width:0}
+.pips i{background:var(--panel-2);border-radius:2px;border:1px solid #c9d6ee}
+.pips i.on{background:linear-gradient(180deg,#ffe470,#f0b416);border-color:#d89a07}
+.step{display:flex;align-items:center;gap:4px}
+.step button{width:36px;height:34px;border-radius:8px;border:2px solid var(--frame-dark);background:linear-gradient(180deg,#fff,var(--panel-2));font-size:18px;font-weight:800;color:var(--frame-dark);box-shadow:0 2px 0 var(--frame-dark)}
+.step button:active:not(:disabled){transform:translateY(2px);box-shadow:none}
+.step button:disabled{opacity:.3;cursor:default}
+.step .n{width:2em;text-align:center;font-family:var(--display);font-size:19px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:2px solid var(--frame-dark);background:#fff;color:var(--frame-dark);border-radius:999px;padding:5px 12px;font-size:12px;font-weight:800;box-shadow:0 2px 0 var(--frame-dark)}
+.btn:active{transform:translateY(2px);box-shadow:none}
+.btn.today{background:var(--gold);border-color:#fff;color:var(--ink);box-shadow:0 3px 0 rgba(0,0,0,.35)}
+
+/* even split picker */
+.split{background:var(--panel-2);border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:8px}
+.split-head{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;font-weight:800;color:var(--frame-dark)}
+.split-head .preview{font-weight:700;color:var(--ink-soft)}
+details.split{gap:0}
+details.split[open]{gap:8px}
+details.split>summary{cursor:pointer;list-style:none}
+details.split>summary::-webkit-details-marker{display:none}
+details.split .split-title::before{content:"▶";display:inline-block;font-size:9px;margin-right:6px;transition:transform .15s}
+details.split[open] .split-title::before{transform:rotate(90deg)}
+details.split:not([open]) .preview{display:none}
+.picks{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.pick{border:2px solid #b9c8e4;background:#fff;color:var(--ink-soft);border-radius:6px;padding:5px 2px;font-size:12.5px;font-weight:800}
+.pick[aria-pressed="true"]{background:linear-gradient(180deg,#6aaaff,#2a6fe0 55%,#1550b8);border-color:#fff;color:#fff;box-shadow:0 0 0 1px var(--frame-dark)}
+.split-actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn.go{background:var(--gold);border-color:#c98d00;color:var(--ink);box-shadow:0 2px 0 #c98d00}
+.btn:disabled{opacity:.4;cursor:default;transform:none}
+
+/* tasks */
+.tasks-box{border:2px solid var(--gold);background:#fffbe8;border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:8px}
+.tasks-box .split-head{color:#7a5500}
+.tasks{display:grid;grid-template-columns:repeat(auto-fill,minmax(7.4em,1fr));gap:5px}
+.task[aria-pressed="true"]{background:linear-gradient(180deg,#fff6b8,#ffd12e 50%,#dc9c00);border-color:#fff;color:#4a2c00;box-shadow:0 0 0 1px #c98d00}
+.wtable-wrap{overflow-x:auto}
+.wtable{border-collapse:collapse;font-size:11.5px;width:100%;min-width:380px}
+.wtable th,.wtable td{padding:4px 4px;text-align:center;border-bottom:1px solid var(--panel-2);font-variant-numeric:tabular-nums}
+.wtable th{color:var(--frame-dark);font-weight:800}
+.wtable td:first-child,.wtable th:first-child{text-align:left;white-space:nowrap;font-weight:700}
+.wtable td.z{color:#b8c4d8}
+.wtable td.hi{font-weight:800;color:var(--frame-dark);background:#e7f0ff}
+
+/* custom tasks */
+.custom{display:flex;flex-direction:column;gap:6px;border-top:2px dashed #f0d36a;padding-top:8px}
+.custom-label{font-size:11.5px;font-weight:800;color:#7a5500}
+#customChips:empty{display:none}
+.task.custom-chip{border-style:dashed}
+.task.custom-chip[aria-pressed="true"]{border-style:solid}
+
+/* place */
+.place-box{border:2px solid var(--frame);background:#eef4ff;border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:8px}
+.places{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.place{display:flex;flex-direction:column;align-items:center;gap:1px;padding:5px 2px}
+.place small{font-size:9.5px;font-weight:700;opacity:.85;line-height:1.2}
+.place-note{border:2px solid #b9c8e4;border-radius:6px;padding:6px 8px;font:inherit;font-size:13px;width:100%;background:#fff;color:var(--ink)}
+.place-note:focus-visible{outline:3px solid var(--gold);outline-offset:1px}
+.judge-row{display:flex;gap:6px;align-items:center}
+.judge-row .place-note{flex:1;min-width:0}
+.judge-row .btn{flex:none;padding:7px 14px}
+.judge-out{white-space:pre-line;font-size:12px;font-weight:700;color:var(--ink);background:#fff;border-radius:6px;padding:6px 8px;border:2px solid #b9c8e4}
+.judge-out b{color:var(--frame-dark)}
+.judge-out.err{color:var(--rB)}
+
+/* projection */
+.proj-legend{display:flex;gap:14px;justify-content:center;font-size:11px;font-weight:700;color:var(--ink-soft)}
+.proj-legend span{display:flex;align-items:center;gap:5px}
+.proj-legend i{display:inline-block;width:18px;height:10px;border-radius:2px}
+.lg-now{border:2px dashed #0f3b8c}
+.lg-proj{background:rgba(255,210,58,.6);border:2px solid #e39a00}
+.proj-rows{display:flex;flex-direction:column;gap:5px}
+.prow{display:grid;grid-template-columns:5.4em 1fr auto;align-items:center;gap:8px;background:#fff;border:2px solid var(--panel-2);border-radius:8px;padding:5px 10px 5px 6px}
+.prow .flow{display:flex;align-items:center;gap:6px;font-weight:800;font-size:12px;color:var(--ink-soft)}
+.prow .flow .rk{font-size:22px}
+.prow .pv{font-family:var(--display);font-size:16px;text-align:right}
+.prow .up{color:var(--rE);font-size:11px;font-weight:800}
+.prow.rise{border-color:#bfe8c9;background:#f3fbf5}
+.proj-skills{display:flex;flex-direction:column;gap:6px}
+.proj-skills h3{margin:0;font-size:12px;font-weight:800;color:var(--frame-dark)}
+.proj-skills .skills{grid-template-columns:repeat(auto-fill,minmax(7.4em,1fr))}
+
+/* consult */
+.consult{display:flex;flex-direction:column;gap:8px;border-top:2px solid var(--panel-2);padding-top:10px}
+.consult h3{margin:0;font-size:13px;font-weight:800;color:var(--frame-dark)}
+.qchips{display:flex;flex-wrap:wrap;gap:6px}
+.qchip{border:2px solid var(--frame);background:#fff;color:var(--frame-dark);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:800}
+.qchip:disabled{opacity:.4;cursor:default}
+.chat{display:flex;flex-direction:column;gap:8px}
+.chat:empty{display:none}
+.msg{max-width:92%;border-radius:10px;padding:8px 10px;font-size:13px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}
+.msg.me{align-self:flex-end;background:var(--frame);color:#fff;border-bottom-right-radius:3px}
+.msg.coach{align-self:flex-start;background:#fff;border:2px solid var(--panel-2);border-bottom-left-radius:3px}
+.msg.coach::before{content:"コーチ";display:block;font-size:10px;font-weight:800;color:var(--frame-dark);margin-bottom:2px}
+.msg.err{border-color:#f3b4b4;color:var(--rB)}
+.ask-row{display:flex;gap:6px;align-items:stretch}
+.ask-row textarea{flex:1;min-width:0;border:2px solid #b9c8e4;border-radius:8px;padding:6px 8px;font:inherit;font-size:13px;resize:vertical;background:#fff;color:var(--ink)}
+.ask-row textarea:focus-visible{outline:3px solid var(--gold);outline-offset:1px}
+.ask-btns{display:flex;flex-direction:column;gap:6px;justify-content:center}
+
+/* calendar */
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal .wd{text-align:center;font-size:11px;font-weight:800;color:var(--ink-soft)}
+.cal .wd.sun{color:var(--rB)} .cal .wd.sat{color:var(--frame)}
+.day{aspect-ratio:1;max-width:100%;border-radius:7px;border:2px solid var(--panel-2);background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-family:var(--display);font-size:13px;padding:0;color:var(--ink)}
+.day small{font-family:var(--body);font-size:9px;font-weight:700;color:var(--ink-soft);line-height:1}
+.day.full{background:linear-gradient(180deg,#3a83ec,var(--frame-dark));border-color:var(--frame-dark);color:#fff}
+.day.full small{color:var(--gold)}
+.day.part{background:#fff6cf;border-color:#f0d36a}
+.day.today{box-shadow:0 0 0 2px var(--gold)}
+.day.sel{outline:3px solid var(--rB);outline-offset:1px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:11px;font-weight:700;color:var(--ink-soft)}
+.legend span{display:flex;align-items:center;gap:5px}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block;border:2px solid var(--panel-2)}
+
+.ranks{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center;font-size:10.5px;font-weight:700;color:var(--ink-soft)}
+.ranks div{display:flex;flex-direction:column;align-items:center;gap:2px}
+.ranks .rk{font-size:26px}
+/* special abilities */
+.skills{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.chip{border-radius:6px;padding:7px 6px;font-weight:800;font-size:13px;text-align:center;color:#fff;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.15),0 2px 0 rgba(0,0,0,.25);text-shadow:0 1px 0 rgba(0,0,0,.3);min-width:0}
+.chip.blue{background:linear-gradient(180deg,#6aaaff,#2a6fe0 55%,#1550b8)}
+.chip.gold{background:linear-gradient(180deg,#fff6b8,#ffd12e 50%,#dc9c00);color:#4a2c00;text-shadow:0 1px 0 rgba(255,255,255,.6)}
+.chip.red{background:linear-gradient(180deg,#ff8a8a,#d92b2b 55%,#a81414)}
+.chip.lock{background:#d7dfec;color:#8695ae;text-shadow:none;box-shadow:none}
+.skill-empty{grid-column:1/-1;text-align:center;font-size:12px;font-weight:700;color:var(--ink-soft);padding:10px;border:2px dashed var(--panel-2);border-radius:8px}
+details.conds{border-top:2px solid var(--panel-2);padding-top:8px}
+details.conds summary{cursor:pointer;font-size:12px;font-weight:800;color:var(--frame-dark)}
+.cond-list{display:flex;flex-direction:column;gap:5px;margin-top:8px}
+.cond{display:grid;grid-template-columns:7.6em 1fr auto;gap:8px;align-items:center;font-size:12px}
+.cond .chip{font-size:11px;padding:4px 4px}
+.cond .txt{min-width:0;color:var(--ink);font-weight:500}
+.cond .st{font-weight:800;color:var(--ink-soft);font-size:11px;white-space:nowrap}
+.cond .st.ok{color:var(--rE)} .cond .st.bad{color:var(--rB)}
+.cond-group{font-size:11px;font-weight:800;color:var(--frame-dark);border-bottom:2px solid var(--panel-2);padding-top:6px;padding-bottom:2px;letter-spacing:.05em}
+@media (max-width:380px){ .srow{grid-template-columns:4.6em 2em 2.8em 1fr;gap:6px} .arow{grid-template-columns:4.6em 1fr auto} }
+@media (prefers-reduced-motion:no-preference){ #shape{transition:all .25s} }
+.savest{font-size:11px;font-weight:800;color:#fff;opacity:.9}.savest[data-ok="0"]{color:#ffd23a}
+/* settings (PWA) */
+.hint{font-size:11.5px;color:var(--ink-soft);font-weight:500;margin:0}
+.set-group{display:flex;flex-direction:column;gap:8px}
+.set-group+.set-group{border-top:2px solid var(--panel-2);padding-top:12px}
+.btn.big{padding:8px 16px;font-size:13px}
+.ribbon{white-space:nowrap}
+@media (max-width:420px){ .savest{display:none} }
+/* スマホでのフォーム拡大を防ぐ（iOSは16px未満の入力欄でズームする） */
+@supports (-webkit-touch-callout:none){ input.place-note,.ask-row textarea{font-size:16px} }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="title">
+    <div class="ribbon"><span>おかまるパワプロ</span></div>
+    <div style="display:flex;align-items:center;gap:8px"><span id="saveStatus" class="savest">読み込み中…</span><button class="btn today" id="goToday">今日へ</button></div>
+  </div>
+  <div class="title">
+    <div class="monthnav">
+      <button class="navbtn" id="prev" aria-label="前の月">◀</button>
+      <div class="m num" id="monthLabel"></div>
+      <button class="navbtn" id="next" aria-label="次の月">▶</button>
+    </div>
+  </div>
+
+  <section class="panel radar">
+    <div class="bar-title">能力<small class="num" id="totalNote"></small></div>
+    <div class="body">
+      <svg id="radar" viewBox="0 0 360 330" role="img" aria-label="6つの欲求の六角形チャート"></svg>
+      <div class="status" id="stats"></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="bar-title">特殊能力<small class="num" id="skillNote"></small></div>
+    <div class="body">
+      <div class="skills" id="skills"></div>
+      <details class="conds">
+        <summary>取得条件を見る</summary>
+        <div class="cond-list" id="condList"></div>
+      </details>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="bar-title"><span id="dayTitle"></span><span class="remain num" id="remain"></span></div>
+    <div class="body">
+      <div class="place-box">
+        <div class="split-head"><span>今日の場所</span><span class="preview" id="placeNoteHead">選んだ場所の欲が1.5倍伸びやすい</span></div>
+        <div class="places" id="places"></div>
+        <div class="judge-row" id="judgeRow" hidden>
+          <input class="place-note" id="placeNote" type="text" placeholder="場所を入力（例：箱根）" enterkeyhint="done">
+          <button class="btn go" id="judgeBtn">判定</button>
+        </div>
+        <div class="judge-out" id="judgeOut" hidden></div>
+      </div>
+      <div class="tasks-box">
+        <div class="split-head"><span>今日やったこと（複数選択）</span><span class="preview" id="taskNote"></span></div>
+        <div class="tasks" id="tasks"></div>
+        <div class="custom" id="customBox">
+          <div class="custom-label">リストにないこと（自由入力）</div>
+          <div class="tasks" id="customChips"></div>
+          <div class="judge-row" id="customRow">
+            <input class="place-note" id="customInput" type="text" placeholder="例：ピアノ、家の掃除、読書" enterkeyhint="done">
+            <button class="btn go" id="customBtn">判定して追加</button>
+          </div>
+          <div class="judge-out" id="customOut" hidden></div>
+        </div>
+        <details class="conds">
+          <summary>タスクごとの影響度を見る</summary>
+          <p style="font-size:11.5px;color:var(--ink-soft);margin:6px 0">各タスクは合計10の配分を持ちます（キックボクシングは合計15、ミルクとおむつ交換は合計5、自主トレーニングとゲームは影響の小さい合計3）。選んだタスクの配分を足し合わせ、30ptに換算して振り分けます。</p>
+          <div class="wtable-wrap"><table class="wtable" id="wtable"></table></div>
+        </details>
+      </div>
+      <div class="alloc" id="alloc"></div>
+      <details class="split" id="splitBox">
+        <summary class="split-head"><span class="split-title">欲を選んで均等割り</span><span class="preview num" id="splitPreview"></span></summary>
+        <div class="picks" id="picks"></div>
+        <div class="split-actions">
+          <button class="btn go" id="doSplit">選んだ欲で30ptを均等割り</button>
+          <button class="btn" id="pickAll">全選択</button>
+          <button class="btn" id="pickNone">選択解除</button>
+        </div>
+      </details>
+      <div class="actions">
+        <button class="btn" id="copyPrev">前日と同じ</button>
+        <button class="btn" id="clearDay">リセット</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="bar-title">カレンダー<small class="num" id="daysNote"></small></div>
+    <div class="body">
+      <div class="cal" id="cal"></div>
+      <div class="legend">
+        <span><i style="background:var(--frame);border-color:var(--frame-dark)"></i>30pt振り済み</span>
+        <span><i style="background:#fff6cf;border-color:#f0d36a"></i>途中</span>
+        <span><i style="background:#fff"></i>未入力</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="bar-title">ランク表<small>初期値10＋振ったpt</small></div>
+    <div class="body"><div class="ranks" id="ranks"></div></div>
+  </section>
+
+  <section class="panel">
+    <div class="bar-title">月末予測<small id="projNote"></small></div>
+    <div class="body" id="projBody">
+      <svg id="projRadar" viewBox="0 0 360 330" role="img" aria-label="月末の予測六角形"></svg>
+      <div class="proj-legend"><span><i class="lg-now"></i>今の能力</span><span><i class="lg-proj"></i>月末の予測</span></div>
+      <div class="proj-rows" id="projRows"></div>
+      <div class="proj-skills" id="projSkills"></div>
+      <div class="consult" id="consult" hidden>
+        <h3>コーチに相談する</h3>
+        <div class="qchips" id="qchips">
+          <button class="qchip" data-q="今月どれか1つをAランクにするには、残りの日で何をすればいい？">Aを1つ取るには？</button>
+          <button class="qchip" data-q="予測で一番低い欲を底上げするには、何をどれくらいやればいい？">弱点を底上げ</button>
+          <button class="qchip" data-q="今のペースだと取れそうな特殊能力と、あと少しで取れる特殊能力を、具体的な行動つきで教えて。">取れそうな特殊能力</button>
+          <button class="qchip" data-q="赤特を付けないために気をつけることは？">赤特を避けるには？</button>
+        </div>
+        <div class="chat" id="chat" aria-live="polite"></div>
+        <div class="ask-row">
+          <textarea id="askBox" rows="2" placeholder="例：冒険欲をBにしたい。何をすればいい？"></textarea>
+          <div class="ask-btns">
+            <button class="btn go" id="askBtn">相談</button>
+            <button class="btn" id="stopBtn" hidden>止める</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="body" id="projEmpty" hidden><div class="skill-empty" id="projEmptyText"></div></div>
+  </section>
+
+  <section class="panel">
+    <div class="bar-title">設定・データ</div>
+    <div class="body">
+      <div class="set-group">
+        <div class="split-head"><span>バックアップ</span><span class="preview" id="lastBackup"></span></div>
+        <div class="actions">
+          <button class="btn go big" id="exportBtn">書き出す</button>
+          <button class="btn big" id="importBtn">読み込む</button>
+          <input type="file" id="importFile" accept="application/json,.json" hidden>
+        </div>
+        <p class="hint">データはこのiPhoneの中だけに保存されます。機種変更の前や、ときどき「書き出す」でファイルに保存しておくと安心です。</p>
+      </div>
+      <div class="set-group">
+        <div class="split-head"><span>AI判定・コーチ相談（任意）</span><span class="preview" id="aiState"></span></div>
+        <div class="judge-row">
+          <input class="place-note" id="apiKey" type="password" placeholder="Anthropic APIキー（sk-ant-…）" autocomplete="off" autocapitalize="off" spellcheck="false">
+          <button class="btn go" id="saveKey">保存</button>
+        </div>
+        <p class="hint">「その他」の場所判定・自由入力の判定・コーチ相談に使います。キーはこの端末にだけ保存され、Anthropic のAPIにだけ送られます。利用料はキーの持ち主のAnthropicアカウントにかかります。キーがなくても、ほかの機能はすべて使えます。</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+/* 保存層：この端末の localStorage に保存（キー名は Artifact 版と同じ） */
+const S=(()=>{
+  const PREFIX="jibun-ikusei:", mem={}; let status=null;
+  try{ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k&&k.startsWith(PREFIX)) mem[k]=localStorage.getItem(k); } }catch(e){}
+  function setStatus(t,ok){ if(!status) status=document.getElementById("saveStatus"); if(status){ status.textContent=t; status.dataset.ok=ok?"1":"0"; } }
+  return {
+    PREFIX,
+    get(k){ return k in mem ? mem[k] : null; },
+    set(k,v){ mem[k]=String(v);
+      try{ localStorage.setItem(k,String(v)); setStatus("保存済み ✓",true); }catch(e){ setStatus("保存できません",false); } },
+    all(){ return {...mem}; },
+    async init(){
+      setStatus("この端末に保存",true);
+      try{ if(navigator.storage&&navigator.storage.persist) await navigator.storage.persist(); }catch(e){}
+    }
+  };
+})();
+
+/* AI：Anthropic API を直接呼ぶ。Artifact 版の sample() / sample.json() と同じ形で返す */
+const AI_KEY="okamaru:apiKey";
+const AI=(()=>{
+  let key=""; try{ key=localStorage.getItem(AI_KEY)||""; }catch(e){}
+  if(!key) return null;
+  const MODEL="claude-sonnet-5-5", MODEL_QUICK="claude-haiku-5-5";
+  async function call(messages,{model=MODEL,signal,onText,max=1024}={}){
+    let res;
+    try{
+      res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",signal,
+        headers:{"content-type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+        body:JSON.stringify({model,max_tokens:max,messages,stream:!!onText})});
+    }catch(e){ throw e&&e.name==="AbortError"?{code:"cancelled"}:{code:"network"}; }
+    if(!res.ok) throw {code:res.status===429||res.status===529?"rate_limited":res.status===401||res.status===403?"not_granted":"error"};
+    if(!onText){ const j=await res.json(); return (j.content||[]).filter(c=>c.type==="text").map(c=>c.text).join(""); }
+    const rd=res.body.getReader(), dec=new TextDecoder(); let buf="", text="";
+    try{
+      for(;;){
+        const {done,value}=await rd.read(); if(done) break;
+        buf+=dec.decode(value,{stream:true}); let i;
+        while((i=buf.indexOf("\n"))>=0){
+          const line=buf.slice(0,i).trim(); buf=buf.slice(i+1);
+          if(!line.startsWith("data:")) continue;
+          try{ const ev=JSON.parse(line.slice(5)); if(ev.type==="content_block_delta"&&ev.delta&&ev.delta.type==="text_delta"){ text+=ev.delta.text; onText({text}); } }catch(e){}
+        }
+      }
+    }catch(e){ throw e&&e.name==="AbortError"?{code:"cancelled",text}:{code:"network",text}; }
+    return text;
+  }
+  const sample=async(messages,opts={})=>({text:await call(messages,opts)});
+  sample.json=async(prompt,opts={})=>{
+    const t=await call([{role:"user",content:prompt}],{model:opts.modelTier==="quick"?MODEL_QUICK:MODEL,max:400});
+    const m=t.match(/\{[\s\S]*\}/); if(!m) throw {code:"invalid_json"};
+    try{ return JSON.parse(m[0]); }catch(e){ throw {code:"invalid_json"}; }
+  };
+  return sample;
+})();
+
+/* 設定パネル：バックアップとAPIキー */
+(()=>{
+  const $=id=>document.getElementById(id);
+  const LB="okamaru:lastBackup";
+  const showLast=()=>{ let t=null; try{ t=localStorage.getItem(LB); }catch(e){} $("lastBackup").textContent=t?`最終 ${new Date(+t).toLocaleDateString("ja-JP")}`:"まだ書き出していません"; };
+  showLast();
+  $("exportBtn").onclick=async()=>{
+    const d=new Date(), stamp=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+    const body=JSON.stringify({app:"okamaru-pawapro",v:1,at:Date.now(),data:S.all()});
+    const name=`okamaru-pawapro-${stamp}.json`;
+    const file=new File([body],name,{type:"application/json"});
+    try{
+      if(navigator.canShare&&navigator.canShare({files:[file]})){ await navigator.share({files:[file],title:name}); }
+      else{ const a=document.createElement("a"); a.href=URL.createObjectURL(file); a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1000); }
+      try{ localStorage.setItem(LB,String(Date.now())); }catch(e){} showLast();
+    }catch(e){ /* 共有シートを閉じた */ }
+  };
+  $("importBtn").onclick=()=>$("importFile").click();
+  $("importFile").onchange=async e=>{
+    const f=e.target.files&&e.target.files[0]; e.target.value=""; if(!f) return;
+    let obj; try{ obj=JSON.parse(await f.text()); }catch(err){ alert("ファイルを読めませんでした"); return; }
+    // 形式：{data:{キー:値}} ／ Artifact のDB形式 {json:"…"} ／ キー:値 そのもの
+    let map=obj&&obj.data&&typeof obj.data==="object"?obj.data:obj;
+    if(map&&typeof map.json==="string"){ try{ map=JSON.parse(map.json); }catch(err){ map=null; } }
+    const keys=map?Object.keys(map).filter(k=>k.startsWith(S.PREFIX)):[];
+    if(!keys.length){ alert("おかまるパワプロのデータが見つかりませんでした"); return; }
+    if(!confirm("今のデータを、このファイルの内容で置き換えます。よろしいですか？")) return;
+    try{
+      Object.keys(S.all()).forEach(k=>localStorage.removeItem(k));
+      keys.forEach(k=>{ const v=map[k]; localStorage.setItem(k,typeof v==="string"?v:JSON.stringify(v)); });
+    }catch(err){ alert("保存できませんでした"); return; }
+    location.reload();
+  };
+  try{ $("apiKey").value=localStorage.getItem(AI_KEY)||""; }catch(e){}
+  $("aiState").textContent=AI?"有効":"未設定";
+  $("saveKey").onclick=()=>{
+    const v=$("apiKey").value.trim();
+    try{ v?localStorage.setItem(AI_KEY,v):localStorage.removeItem(AI_KEY); }catch(e){}
+    location.reload();
+  };
+})();
+</script>
+<script>
+function __app(){
+const PARAMS=["仕事欲","暴力欲","創造欲","冒険欲","育児欲","交流欲"];
+const DAILY=30, BASE=10, GMAX=400;
+const RANKS=[["A",330],["B",250],["C",190],["D",140],["E",100],["F",60],["G",10]];
+const RC={A:"#ff5fae",B:"#e3262d",C:"#f6cb12",D:"#f2871b",E:"#22a845",F:"#3fc1ec",G:"#111111"};
+const KEY="jibun-ikusei:v1";
+
+let data={};
+try{ data=JSON.parse(S.get(KEY)||"{}")||{}; }catch(e){ data={}; }
+function save(){ try{ S.set(KEY,JSON.stringify(data)); }catch(e){} }
+
+const now=new Date();
+let viewY=now.getFullYear(), viewM=now.getMonth();
+let selDay=now.getDate();
+
+const mkey=()=>`${viewY}-${String(viewM+1).padStart(2,"0")}`;
+const daysIn=()=>new Date(viewY,viewM+1,0).getDate();
+const monthData=()=>(data[mkey()] ||= {});
+const dayVals=d=>monthData()[d]||[0,0,0,0,0,0];
+const sum=a=>a.reduce((x,y)=>x+y,0);
+function rankOf(v){ for(const [r,t] of RANKS){ if(v>=t) return r; } return "G"; }
+function nextRank(v){ for(let i=RANKS.length-1;i>=0;i--){ if(v<RANKS[i][1]) return RANKS[i]; } return null; }
+
+function totals(){
+  const t=[0,0,0,0,0,0]; const md=monthData();
+  for(const d in md){ md[d].forEach((v,i)=>t[i]+=v); }
+  return t.map(v=>v+BASE);
+}
+
+const SVGNS="http://www.w3.org/2000/svg";
+function el(tag,attrs,parent){ const e=document.createElementNS(SVGNS,tag); for(const k in attrs) if(attrs[k]!=null) e.setAttribute(k,attrs[k]); parent&&parent.appendChild(e); return e; }
+
+function drawRadar(vals,id="radar",ghost=null){
+  const svg=document.getElementById(id); svg.innerHTML="";
+  const cx=180, cy=168, R=108;
+  const ang=i=>(-90+60*i)*Math.PI/180;
+  const pt=(i,v)=>{ const r=R*Math.min(v,GMAX)/GMAX; return [cx+r*Math.cos(ang(i)), cy+r*Math.sin(ang(i))]; };
+  const hex=v=>PARAMS.map((_,i)=>pt(i,v).join(",")).join(" ");
+  // filled rank bands from outside in
+  const bands=[["A",GMAX],...RANKS.slice(0,6).map(([r,t],i)=>[RANKS[i+1][0],t])];
+  bands.forEach(([r,t])=>{ el("polygon",{points:hex(t),fill:RC[r],"fill-opacity":r==="G"?.08:.16,stroke:"#ffffff","stroke-width":1.5},svg); });
+  el("polygon",{points:hex(GMAX),fill:"none",stroke:"#1d5fd0","stroke-width":3},svg);
+  PARAMS.forEach((_,i)=>{ const [x,y]=pt(i,GMAX); el("line",{x1:cx,y1:cy,x2:x,y2:y,stroke:"#ffffff","stroke-width":1.5},svg); });
+  // ghost (current, shown under a projection)
+  if(ghost) el("polygon",{points:ghost.map((v,i)=>pt(i,v).join(",")).join(" "),fill:"none",stroke:"#0f3b8c","stroke-width":1.8,"stroke-dasharray":"4 3","stroke-opacity":.7},svg);
+  // value shape
+  el("polygon",{id:id==="radar"?"shape":null,points:vals.map((v,i)=>pt(i,v).join(",")).join(" "),fill:"#ffd23a","fill-opacity":.55,stroke:"#e39a00","stroke-width":2.5,"stroke-linejoin":"round"},svg);
+  vals.forEach((v,i)=>{ const [x,y]=pt(i,v); el("circle",{cx:x,cy:y,r:5,fill:RC[rankOf(v)],stroke:"#fff","stroke-width":2},svg); });
+  // labels
+  PARAMS.forEach((name,i)=>{
+    const a=ang(i), c=Math.cos(a), s=Math.sin(a);
+    const lx=cx+(R+34)*c, ly=cy+(R+28)*s;
+    const anchor=Math.abs(c)<.2?"middle":(c>0?"start":"end");
+    const r=rankOf(vals[i]);
+    const nx=anchor==="start"?lx-14:anchor==="end"?lx+14:lx;
+    const nt=el("text",{x:nx,y:ly-6,"text-anchor":anchor,"font-size":12,"font-weight":800,fill:"#0f3b8c","font-family":"M PLUS 1p, sans-serif"},svg); nt.textContent=name;
+    const rt=el("text",{x:nx,y:ly+18,"text-anchor":anchor,"font-size":24,fill:RC[r],stroke:"#ffffff","stroke-width":5,"paint-order":"stroke","font-family":"Dela Gothic One, sans-serif"},svg);
+    rt.textContent=r;
+    const vt=el("text",{x:anchor==="end"?nx-24:anchor==="start"?nx+24:nx+20,y:ly+16,"text-anchor":anchor==="middle"?"start":anchor,"font-size":12,"font-weight":800,fill:"#4a5d80","font-family":"M PLUS 1p, sans-serif"},svg);
+    vt.textContent=vals[i];
+  });
+}
+
+function renderStats(vals){
+  const box=document.getElementById("stats"); box.innerHTML="";
+  vals.forEach((v,i)=>{
+    const r=rankOf(v), nx=nextRank(v);
+    const filled=Math.min(20,Math.round(v/GMAX*20));
+    let cells=""; for(let k=0;k<20;k++){
+      const cellVal=(k+1)/20*GMAX; const cr=rankOf(cellVal);
+      cells+=k<filled?`<i style="background:${RC[cr]===RC.G?"#5b667e":RC[cr]}"></i>`:"<i></i>";
+    }
+    const d=document.createElement("div"); d.className="srow";
+    d.innerHTML=`<span class="sname">${PARAMS[i]}</span><span class="rk r${r}">${r}</span><span class="sval num">${v}</span>
+      <div class="gauge-wrap"><div class="gauge" aria-hidden="true">${cells}</div><div class="gnext num">${nx?`${nx[0]}まであと${nx[1]-v}`:"MAXランク"}</div></div>`;
+    box.appendChild(d);
+  });
+  const used=sum(vals)-BASE*6;
+  document.getElementById("totalNote").textContent=`振り分け ${used} / ${daysIn()*DAILY}pt`;
+}
+
+function renderAlloc(){
+  const vals=dayVals(selDay), s=sum(vals), left=DAILY-s;
+  const wd="日月火水木金土"[new Date(viewY,viewM,selDay).getDay()];
+  document.getElementById("dayTitle").textContent=`${viewM+1}/${selDay}（${wd}）の振り分け`;
+  const rem=document.getElementById("remain");
+  rem.className="remain num"+(left===0?" done":"");
+  rem.innerHTML=left===0?`<b>完了</b>`:`残り<b>${left}</b>pt`;
+  const box=document.getElementById("alloc"); box.innerHTML="";
+  vals.forEach((v,i)=>{
+    const row=document.createElement("div"); row.className="arow";
+    let pips=""; for(let k=0;k<15;k++) pips+=`<i class="${k<Math.ceil(v/2)?"on":""}"></i>`;
+    row.innerHTML=`<span class="sname">${PARAMS[i]}</span><div class="pips" aria-hidden="true">${pips}</div>
+      <div class="step"><button id="m${i}" aria-label="${PARAMS[i]}を1減らす" ${v<=0?"disabled":""}>−</button><span class="n num">${v}</span><button id="p${i}" aria-label="${PARAMS[i]}を1増やす" ${left<=0?"disabled":""}>＋</button></div>`;
+    box.appendChild(row);
+    row.querySelector(`#m${i}`).onclick=()=>setVal(i,v-1);
+    row.querySelector(`#p${i}`).onclick=()=>setVal(i,v+1);
+  });
+}
+
+/* タスク：配分は [仕事, 暴力, 創造, 冒険, 育児, 交流]、各合計10 */
+const TASKS=[
+  {name:"キックボクシング", w:[0,12,0,0,0,3]},
+  {name:"グラップリング",   w:[0,9,0,0,0,1]},
+  {name:"白水研修",         w:[7,0,2,0,0,1]},
+  {name:"コンサル業務",     w:[7,0,0,0,0,3]},
+  {name:"ミルクとおむつ交換", w:[0,0,0,0,5,0]},
+  {name:"料理",             w:[0,0,0,0,9,1]},
+  {name:"英語学習",         w:[0,0,4,6,0,0]},
+  {name:"動画鑑賞",         w:[0,0,10,0,0,0]},
+  {name:"飲み",             w:[0,0,2,0,0,8]},
+  {name:"サウナ",           w:[1,0,3,3,0,3]},
+  {name:"ゴルフ",           w:[3,3,1,0,0,3]},
+  {name:"スノーボード",     w:[0,3,0,6,0,1]},
+  {name:"旅行",             w:[0,0,0,8,0,2]},
+  {name:"自主トレーニング", w:[0,3,0,0,0,0], light:true},
+  {name:"お風呂",           w:[0,0,3,0,7,0]},
+  {name:"ゲーム",           w:[0,0,1.5,1.5,0,0], light:true},
+  {name:"運転・送迎",       w:[1,0,0,3,4,2]},
+];
+let taskData={};
+try{ taskData=JSON.parse(S.get(KEY+":tasks")||"{}")||{}; }catch(e){ taskData={}; }
+function saveTasks(){ try{ S.set(KEY+":tasks",JSON.stringify(taskData)); }catch(e){} }
+const dayTasks=()=>((taskData[mkey()]||{})[selDay])||[];
+/* 場所：選んだ場所の2つの欲は、タスクの影響度が1.5倍になる */
+const PLACES=[
+  {name:"四谷",  boost:[4,1]}, // 育児・暴力
+  {name:"荻窪",  boost:[2,0]}, // 創造・仕事
+  {name:"草加",  boost:[0,3]}, // 仕事・冒険
+  {name:"その他",boost:[3,5]}, // 冒険・交流
+];
+const BOOST=1.5;
+let placeData={};
+try{ placeData=JSON.parse(S.get(KEY+":place")||"{}")||{}; }catch(e){ placeData={}; }
+function savePlace(){ try{ S.set(KEY+":place",JSON.stringify(placeData)); }catch(e){} }
+const dayPlace=()=>((placeData[mkey()]||{})[selDay])||null;
+function placeBoost(pl){ return pl.p===3&&Array.isArray(pl.boost)&&pl.boost.length===2?pl.boost:PLACES[pl.p].boost; }
+function reapply(){ const list=dayTasks(); if(list.length||dayCustom().length) setDay(taskValues(list)); else renderAll(); }
+function selectPlace(p){
+  const m=(placeData[mkey()] ||= {});
+  const cur=m[selDay];
+  if(cur&&cur.p===p) delete m[selDay]; else m[selDay]={p,note:"",boost:null,reason:""};
+  savePlace(); reapply();
+}
+
+/* その他：入力した土地から伸びやすい欲をClaudeが判定 */
+let samplePromise=Promise.resolve(AI);
+let judging=false;
+async function judgePlace(){
+  const m=(placeData[mkey()] ||= {}); const cur=m[selDay];
+  if(!cur||cur.p!==3) return;
+  const name=document.getElementById("placeNote").value.trim();
+  const out=document.getElementById("judgeOut");
+  if(!name){ out.hidden=false; out.className="judge-out err"; out.textContent="場所を入力してください"; return; }
+  cur.note=name; savePlace();
+  const sample=await samplePromise;
+  if(!sample){ out.hidden=false; out.className="judge-out err"; out.textContent="AI判定は下の「設定」でAPIキーを入れると使えます。今は冒険欲・交流欲で計算します"; return; }
+  judging=true; document.getElementById("judgeBtn").disabled=true;
+  out.hidden=false; out.className="judge-out"; out.textContent="判定中…";
+  const prompt=`あなたは自分育成ゲームの判定役です。プレイヤーが1日を過ごした土地から、伸びやすい欲を2つ選びます。
+欲の意味:
+- 仕事欲: 仕事・学び・キャリア・ビジネス
+- 暴力欲: 格闘技・スポーツ・体を動かす・闘争心
+- 創造欲: 創作・文化・芸術・インプット・ひらめき
+- 冒険欲: 未知の場所・自然・旅・挑戦
+- 育児欲: 子育て・家族と過ごす
+- 交流欲: 人付き合い・飲み・にぎわい・社交
+参考（ゲーム内の既定）: 四谷=育児欲と暴力欲、荻窪=創造欲と仕事欲、草加=仕事欲と冒険欲。
+土地: 「${name.slice(0,80)}」
+その土地の特徴（街の性格、名所、自然、ビジネス街かどうか等）から判断してください。
+JSONだけで返答: {"boost":["欲名","欲名"],"reason":"40字以内の日本語の理由"}
+欲名は上の6つから異なる2つを、表記どおりに。`;
+  try{
+    const r=await sample.json(prompt,{modelTier:"quick",cache:{gcTime:86400000}});
+    const idx=(Array.isArray(r?.boost)?r.boost:[]).map(b=>PARAMS.indexOf(String(b).trim())).filter(i=>i>=0);
+    const uniq=[...new Set(idx)].slice(0,2);
+    if(uniq.length!==2) throw {code:"invalid_json"};
+    const c2=(placeData[mkey()]||{})[selDay];
+    if(c2&&c2.p===3){ c2.boost=uniq; c2.reason=String(r.reason||"").slice(0,60); c2.note=name; savePlace(); }
+    judging=false; reapply();
+  }catch(e){
+    judging=false;
+    out.className="judge-out err";
+    out.textContent=e&&e.code==="not_granted"?"判定が許可されませんでした。冒険欲・交流欲で計算します"
+      :e&&e.code==="rate_limited"?"判定が混み合っています。少し待ってからもう一度押してください"
+      :"判定できませんでした。もう一度押してください";
+    document.getElementById("judgeBtn").disabled=false;
+  }
+}
+document.getElementById("judgeBtn").onclick=judgePlace;
+document.getElementById("placeNote").addEventListener("keydown",e=>{ if(e.key==="Enter"&&!e.isComposing){ e.preventDefault(); judgePlace(); } });
+
+function renderPlaces(){
+  const cur=dayPlace();
+  const box=document.getElementById("places"); box.innerHTML="";
+  PLACES.forEach((pl,i)=>{
+    const b=document.createElement("button"); b.className="pick place";
+    b.innerHTML=i===3?`その他<small>自動判定</small>`:`${pl.name}<small>${pl.boost.map(k=>PARAMS[k].replace("欲","")).join("・")}↑</small>`;
+    b.setAttribute("aria-pressed",cur&&cur.p===i?"true":"false");
+    b.onclick=()=>selectPlace(i);
+    box.appendChild(b);
+  });
+  const inp=document.getElementById("placeNote"), row=document.getElementById("judgeRow"), out=document.getElementById("judgeOut");
+  const other=!!(cur&&cur.p===3);
+  row.hidden=!other;
+  if(document.activeElement!==inp) inp.value=cur&&cur.note?cur.note:"";
+  if(!judging){
+    document.getElementById("judgeBtn").disabled=false;
+    if(other&&cur.boost&&cur.boost.length===2){
+      out.hidden=false; out.className="judge-out";
+      out.innerHTML=`<b></b> → <b></b>${cur.reason?"<br>":""}<span></span>`;
+      const bs=out.querySelectorAll("b"); bs[0].textContent=cur.note; bs[1].textContent=cur.boost.map(k=>PARAMS[k]).join("・");
+      out.querySelector("span").textContent=cur.reason||"";
+    } else if(other){ out.hidden=false; out.className="judge-out"; out.textContent="場所を入れて「判定」を押すと、伸びやすい欲が決まります（判定前は冒険欲・交流欲）"; }
+    else out.hidden=true;
+  }
+  document.getElementById("placeNoteHead").textContent=cur
+    ? `${placeBoost(cur).map(k=>PARAMS[k]).join("と")}が1.5倍`
+    : "選んだ場所の欲が1.5倍伸びやすい";
+}
+document.getElementById("placeNote").addEventListener("input",e=>{
+  const m=(placeData[mkey()] ||= {}); const c=m[selDay];
+  if(c&&c.p===3&&c.note!==e.target.value.trim()&&c.boost){ c.boost=null; c.reason=""; savePlace(); reapply(); }
+});
+
+/* 自由入力のタスク：Claudeが内容から配分を判定。判定結果は名前ごとに覚えて再利用 */
+let customData={}, customLib={};
+try{ customData=JSON.parse(S.get(KEY+":custom")||"{}")||{}; }catch(e){ customData={}; }
+try{ customLib=JSON.parse(S.get(KEY+":customLib")||"{}")||{}; }catch(e){ customLib={}; }
+function saveCustom(){ try{ S.set(KEY+":custom",JSON.stringify(customData)); S.set(KEY+":customLib",JSON.stringify(customLib)); }catch(e){} }
+const dayCustom=()=>(((customData[mkey()]||{})[selDay])||[]).filter(n=>customLib[n]);
+const wText=w=>w.map((x,i)=>x?`${PARAMS[i].replace("欲","")}${+x.toFixed(1)}`:null).filter(Boolean).join("・");
+
+function taskValues(list,customs=dayCustom()){
+  const raw=[0,0,0,0,0,0];
+  list.forEach(t=>TASKS[t].w.forEach((x,i)=>raw[i]+=x));
+  customs.forEach(n=>customLib[n].w.forEach((x,i)=>raw[i]+=x));
+  const pl=dayPlace(); if(pl) placeBoost(pl).forEach(k=>raw[k]*=BOOST);
+  const total=sum(raw); if(!total) return null;
+  const exact=raw.map(x=>x/total*DAILY), vals=exact.map(Math.floor);
+  let rest=DAILY-sum(vals);
+  exact.map((x,i)=>[x-Math.floor(x),i]).sort((a,b)=>b[0]-a[0]||a[1]-b[1]).forEach(([,i])=>{ if(rest>0){ vals[i]++; rest--; } });
+  return vals;
+}
+function applyTasks(){ setDay(taskValues(dayTasks())||[0,0,0,0,0,0]); }
+function toggleTask(t){
+  const m=(taskData[mkey()] ||= {});
+  const cur=new Set(m[selDay]||[]);
+  cur.has(t)?cur.delete(t):cur.add(t);
+  const list=[...cur].sort((a,b)=>a-b);
+  if(list.length) m[selDay]=list; else delete m[selDay];
+  saveTasks(); applyTasks();
+}
+function toggleCustom(name,force){
+  const m=(customData[mkey()] ||= {});
+  const cur=new Set(m[selDay]||[]);
+  const on=force===undefined?!cur.has(name):force;
+  on?cur.add(name):cur.delete(name);
+  if(cur.size) m[selDay]=[...cur]; else delete m[selDay];
+  if(on&&customLib[name]) customLib[name].used=Date.now();
+  saveCustom(); applyTasks();
+}
+function renderTasks(){
+  const sel=new Set(dayTasks());
+  const box=document.getElementById("tasks"); box.innerHTML="";
+  TASKS.forEach((t,i)=>{
+    const b=document.createElement("button"); b.className="pick task"; b.textContent=t.name;
+    b.setAttribute("aria-pressed",sel.has(i)?"true":"false");
+    b.onclick=()=>toggleTask(i);
+    box.appendChild(b);
+  });
+  // 自由入力：今日選んだもの＋最近使ったもの
+  const csel=new Set(dayCustom());
+  const names=Object.keys(customLib).sort((a,b)=>(csel.has(b)-csel.has(a))||((customLib[b].used||0)-(customLib[a].used||0))).slice(0,Math.max(10,csel.size));
+  const cbox=document.getElementById("customChips"); cbox.innerHTML="";
+  names.forEach(n=>{
+    const b=document.createElement("button"); b.className="pick task custom-chip"; b.textContent=n;
+    b.title=wText(customLib[n].w); b.setAttribute("aria-pressed",csel.has(n)?"true":"false");
+    b.onclick=()=>toggleCustom(n);
+    cbox.appendChild(b);
+  });
+  const k=sel.size+csel.size;
+  document.getElementById("taskNote").textContent=k?`${k}件 → 自動で振り分け`:"選ぶと自動で振り分け";
+}
+
+let customBusy=false;
+async function addCustom(){
+  const inp=document.getElementById("customInput"), out=document.getElementById("customOut"), btn=document.getElementById("customBtn");
+  const name=inp.value.trim().slice(0,30);
+  const say=(t,err)=>{ out.hidden=false; out.className="judge-out"+(err?" err":""); out.textContent=t; };
+  if(!name) return say("やったことを入力してください",true);
+  if(TASKS.some(t=>t.name===name)){ const i=TASKS.findIndex(t=>t.name===name); if(!dayTasks().includes(i)) toggleTask(i); inp.value=""; return say(`「${name}」はタスク一覧にあるので、そちらを選びました`); }
+  if(customLib[name]){ toggleCustom(name,true); inp.value=""; return say(`「${name}」を追加しました（${wText(customLib[name].w)}）`); }
+  if(customBusy) return;
+  const sample=await samplePromise;
+  if(!sample) return say("自由入力の判定は、下の「設定」でAPIキーを入れると使えます",true);
+  customBusy=true; btn.disabled=true; say("判定中…");
+  const examples=TASKS.map(t=>`${t.name}: [${t.w.join(",")}]`).join("\n");
+  const prompt=`自分育成ゲームで、プレイヤーがその日にやったことを6つの欲に配分します。
+欲（この順番）: 仕事欲, 暴力欲, 創造欲, 冒険欲, 育児欲, 交流欲
+- 仕事欲: 仕事・学び・キャリア / 暴力欲: 格闘技・スポーツ・体を動かす / 創造欲: 創作・文化・インプット・ひらめき
+- 冒険欲: 未知・自然・旅・挑戦 / 育児欲: 子育て・家族 / 交流欲: 人付き合い・社交
+既存タスクの配分例（合計10。影響の小さいものは合計3）:
+${examples}
+やったこと: 「${name}」
+上の例と同じ感覚で配分してください。ちょっとした日常の行為なら合計3、しっかりした活動なら合計10。
+JSONだけで返答: {"weights":[仕事,暴力,創造,冒険,育児,交流],"total":10または3,"reason":"30字以内の日本語"}`;
+  try{
+    const r=await sample.json(prompt,{modelTier:"quick",cache:{gcTime:86400000}});
+    let w=(Array.isArray(r?.weights)?r.weights:[]).slice(0,6).map(x=>Math.max(0,Number(x)||0));
+    if(w.length!==6||!sum(w)) throw {code:"invalid_json"};
+    const total=Number(r.total)===3?3:10;
+    w=w.map(x=>Math.round(x/sum(w)*total*10)/10);
+    customLib[name]={w,light:total===3,reason:String(r.reason||"").slice(0,40),used:Date.now()};
+    saveCustom(); inp.value="";
+    toggleCustom(name,true);
+    say(`「${name}」→ ${wText(w)}${total===3?"（影響小）":""}${customLib[name].reason?"\n"+customLib[name].reason:""}`);
+  }catch(e){
+    say(e&&e.code==="not_granted"?"判定が許可されませんでした":e&&e.code==="rate_limited"?"混み合っています。少し待ってからもう一度どうぞ":"判定できませんでした。もう一度押してください",true);
+  }finally{ customBusy=false; btn.disabled=false; }
+}
+document.getElementById("customBtn").onclick=addCustom;
+document.getElementById("customInput").addEventListener("keydown",e=>{ if(e.key==="Enter"&&!e.isComposing){ e.preventDefault(); addCustom(); } });
+function renderWeightTable(){
+  const head=`<tr><th>タスク</th>${PARAMS.map(p=>`<th>${p.replace("欲","")}</th>`).join("")}</tr>`;
+  const rows=TASKS.map(t=>{ const mx=Math.max(...t.w);
+    return `<tr><td>${t.name}</td>${t.w.map(x=>`<td class="${x===0?"z":x===mx?"hi":""}">${x}</td>`).join("")}</tr>`; }).join("");
+  document.getElementById("wtable").innerHTML=head+rows;
+}
+
+/* 均等割り：30を選んだ数で割り、余りは六角形の並び順で先頭から1ptずつ */
+let picked=new Set();
+try{ picked=new Set(JSON.parse(S.get(KEY+":picked")||"[]")); }catch(e){}
+function savePicked(){ try{ S.set(KEY+":picked",JSON.stringify([...picked])); }catch(e){} }
+function splitValues(){
+  const idx=PARAMS.map((_,i)=>i).filter(i=>picked.has(i));
+  if(!idx.length) return null;
+  const base=Math.floor(DAILY/idx.length); let rest=DAILY-base*idx.length;
+  const vals=[0,0,0,0,0,0];
+  idx.forEach(i=>{ vals[i]=base+(rest>0?1:0); if(rest>0) rest--; });
+  return vals;
+}
+function renderPicks(){
+  const box=document.getElementById("picks"); box.innerHTML="";
+  PARAMS.forEach((name,i)=>{
+    const b=document.createElement("button"); b.className="pick"; b.textContent=name;
+    b.setAttribute("aria-pressed",picked.has(i)?"true":"false");
+    b.onclick=()=>{ picked.has(i)?picked.delete(i):picked.add(i); savePicked(); renderPicks(); };
+    box.appendChild(b);
+  });
+  const v=splitValues();
+  document.getElementById("doSplit").disabled=!v;
+  document.getElementById("splitPreview").textContent=v
+    ? PARAMS.map((n,i)=>picked.has(i)?`${n.replace("欲","")}${v[i]}`:null).filter(Boolean).join("・")
+    : "選ぶと配分が出ます";
+}
+document.getElementById("doSplit").onclick=()=>{ const v=splitValues(); if(v) setDay(v); };
+document.getElementById("pickAll").onclick=()=>{ picked=new Set([0,1,2,3,4,5]); savePicked(); renderPicks(); };
+document.getElementById("pickNone").onclick=()=>{ picked=new Set(); savePicked(); renderPicks(); };
+
+function setVal(i,v){
+  const vals=[...dayVals(selDay)]; vals[i]=Math.max(0,v);
+  if(sum(vals)>DAILY) return;
+  setDay(vals);
+}
+function setDay(vals){
+  if(sum(vals)===0) delete monthData()[selDay]; else monthData()[selDay]=vals;
+  save(); renderAll();
+}
+
+function renderCal(){
+  const box=document.getElementById("cal"); box.innerHTML="";
+  "日月火水木金土".split("").forEach((w,i)=>{ const d=document.createElement("div"); d.className="wd"+(i===0?" sun":i===6?" sat":""); d.textContent=w; box.appendChild(d); });
+  const first=new Date(viewY,viewM,1).getDay();
+  for(let i=0;i<first;i++) box.appendChild(document.createElement("div"));
+  let full=0;
+  const isThisMonth=viewY===now.getFullYear()&&viewM===now.getMonth();
+  for(let d=1;d<=daysIn();d++){
+    const s=sum(dayVals(d)); if(s===DAILY) full++;
+    const b=document.createElement("button");
+    b.className="day num"+(s===DAILY?" full":s>0?" part":"")+(isThisMonth&&d===now.getDate()?" today":"")+(d===selDay?" sel":"");
+    b.innerHTML=`${d}<small>${s?s+"pt":""}</small>`;
+    b.setAttribute("aria-label",`${viewM+1}月${d}日 ${s}pt`);
+    b.onclick=()=>{ selDay=d; renderAll(); };
+    box.appendChild(b);
+  }
+  document.getElementById("daysNote").textContent=`${full} / ${daysIn()}日 完了`;
+}
+
+function renderRanks(){
+  const box=document.getElementById("ranks"); box.innerHTML="";
+  RANKS.forEach(([r,t],i)=>{
+    const d=document.createElement("div");
+    d.innerHTML=`<span class="rk r${r}">${r}</span><span class="num">${t}${i===0?"〜":"〜"+(RANKS[i-1][1]-1)}</span>`;
+    box.appendChild(d);
+  });
+}
+
+/* ---------- 特殊能力 ---------- */
+const RANK_ORDER="GFEDCBA";
+const atLeast=(v,r)=>RANK_ORDER.indexOf(rankOf(v))>=RANK_ORDER.indexOf(r);
+function needTo(v,r){ const t=RANKS.find(x=>x[0]===r)[1]; return v>=t?"":`あと${t-v}`; }
+
+function context(){
+  const tot=totals(), md=monthData(), n=daysIn();
+  const isThis=viewY===now.getFullYear()&&viewM===now.getMonth();
+  const isPast=new Date(viewY,viewM+1,1)<=new Date(now.getFullYear(),now.getMonth(),1);
+  const elapsed=isThis?now.getDate()-1:(isPast?n:0); // 昨日までの日数
+  const tm=taskData[mkey()]||{}, pm=placeData[mkey()]||{};
+  const vals=d=>md[d]||[0,0,0,0,0,0];
+  const tasks=d=>tm[d]||[];
+  // 月内のどの7日間で見ても、条件を満たした日が最も多かった日数
+  const wk=(pred,upto=n)=>{ const hit=[]; for(let d=1;d<=upto;d++) hit.push(pred(d)?1:0);
+    let best=0; for(let s=0;s<hit.length;s++){ let k=0; for(let j=s;j<Math.min(s+7,hit.length);j++) k+=hit[j]; if(k>best) best=k; } return best; };
+  const has=(d,list)=>list.some(t=>tasks(d).includes(t));
+  let full=0, entered=0;
+  for(let d=1;d<=n;d++){ const s=sum(vals(d)); if(s===DAILY) full++; if(s>0) entered++; }
+  return {
+    tot,n,full,entered,
+    best:wk(d=>sum(vals(d))===DAILY),
+    gap:wk(d=>sum(vals(d))===0,elapsed),
+    focus:wk(d=>Math.max(...vals(d))>=20),
+    aCount:tot.filter(v=>v>=330).length, gCount:tot.filter(v=>v<60).length,
+    tw:TASKS.map((_,i)=>wk(d=>tasks(d).includes(i))),           // タスクごと：7日間で最多何日
+    tc:TASKS.map((_,i)=>{ let k=0; for(let d=1;d<=n;d++) if(tasks(d).includes(i)) k++; return k; }), // タスクごと：月の合計日数
+    both:(a,b)=>wk(d=>has(d,a)&&has(d,b)),                        // 2系統を同じ日にした日
+    any:list=>wk(d=>has(d,list)),
+    many:wk(d=>tasks(d).length>=5),
+    pw:[0,1,2,3].map(p=>wk(d=>pm[d]&&pm[d].p===p)),              // 場所ごと：7日間で最多何日
+    // 追加の集計
+    wk, has, elapsed,
+    entE:(pred)=>wk(d=>sum(vals(d))>0&&pred(d),elapsed),         // 入力済みの日だけで数える
+    distinctMonth:new Set(Object.values(tm).flat()).size,
+    distinctWeek:(()=>{ let best=0; for(let s=1;s<=n;s++){ const set=new Set(); for(let d=s;d<Math.min(s+7,n+1);d++) tasks(d).forEach(t=>set.add(t)); best=Math.max(best,set.size); } return best; })(),
+    placesUsed:new Set(Object.values(pm).map(p=>p.p).filter(p=>p<3)).size,
+    otherUniq:new Set(Object.values(pm).filter(p=>p.p===3&&p.note).map(p=>p.note.trim())).size,
+    allIn:(()=>{ let k=0; for(let d=1;d<=n;d++) if(Math.max(...vals(d))===DAILY) k++; return k; })(),
+    weekendActive:(()=>{ let k=0; for(let d=1;d<=n;d++){ const w=new Date(viewY,viewM,d).getDay(); if((w===0||w===6)&&has(d,[0,1,10,11,12])) k++; } return k; })(),
+    comboMonth:(a,b)=>{ let k=0; for(let d=1;d<=n;d++) if(has(d,a)&&has(d,b)) k++; return k; },
+    sameRun:(()=>{ let cur=0,best=0,prev=""; for(let d=1;d<=n;d++){ const key=tasks(d).join(","); if(key&&key===prev){cur++;} else cur=key?1:0; prev=key; best=Math.max(best,cur);} return best; })(),
+    run:(list)=>{ let cur=0,best=0; for(let d=1;d<=n;d++){ if(has(d,list)){cur++;best=Math.max(best,cur);} else cur=0; } return best; }, // 連続日数の最長
+    topShare:(()=>{ const t=tot.map(v=>v-BASE), s=sum(t); return s?Math.max(...t)/s:0; })(),
+  };
+}
+// 「7日間のうちX日」の条件 [達成, 進み具合]
+const W=(k,need)=>[k>=need,`最多${k}/${need}日`];
+const T=(c,i,need)=>W(c.tw[i],need);
+
+const SKILLS=[
+  // 金特（Aランク・偉業）
+  {name:"仕事の鬼",type:"gold",up:["仕事人","キレ者"],txt:"仕事欲がAランク",f:c=>[atLeast(c.tot[0],"A"),needTo(c.tot[0],"A")]},
+  {name:"破壊神",type:"gold",up:["闘争心","鉄拳"],txt:"暴力欲がAランク",f:c=>[atLeast(c.tot[1],"A"),needTo(c.tot[1],"A")]},
+  {name:"天才肌",type:"gold",up:["ひらめき","アイデアマン"],txt:"創造欲がAランク",f:c=>[atLeast(c.tot[2],"A"),needTo(c.tot[2],"A")]},
+  {name:"開拓者",type:"gold",up:["旅人","探検家"],txt:"冒険欲がAランク",f:c=>[atLeast(c.tot[3],"A"),needTo(c.tot[3],"A")]},
+  {name:"家族の太陽",type:"gold",up:["子煩悩","パパの鑑"],txt:"育児欲がAランク",f:c=>[atLeast(c.tot[4],"A"),needTo(c.tot[4],"A")]},
+  {name:"顔役",type:"gold",up:["人たらし","社交家"],txt:"交流欲がAランク",f:c=>[atLeast(c.tot[5],"A"),needTo(c.tot[5],"A")]},
+  {name:"二刀流",type:"gold",txt:"Aランクを2つ取る",f:c=>[c.aCount>=2,`${c.aCount}/2`]},
+  {name:"鉄人",type:"gold",up:"継続は力",txt:"月の全日で30pt振り分け",f:c=>[c.full>=c.n,`${c.full}/${c.n}日`]},
+  {name:"格闘家",type:"gold",up:["打撃職人","寝技師"],txt:"1週間のうち5日、キックかグラップリング",f:c=>W(c.any([0,1]),5)},
+  {name:"二足のわらじ",type:"gold",up:"後継者の自覚",txt:"1週間のうち3日、白水研修とコンサル業務を同じ日に",f:c=>W(c.both([2],[3]),3)},
+  {name:"グローバル",type:"gold",up:"英語漬け",txt:"1週間毎日、英語学習",f:c=>T(c,6,7)},
+  {name:"文武両道",type:"gold",txt:"1週間のうち4日、格闘技と英語学習を同じ日に",f:c=>W(c.both([0,1],[6]),4)},
+  // 青特（ランク・振り分け）
+  {name:"キレ者",type:"blue",up:"仕事人",txt:"仕事欲がBランク以上",f:c=>[atLeast(c.tot[0],"B"),needTo(c.tot[0],"B")]},
+  {name:"鉄拳",type:"blue",up:"闘争心",txt:"暴力欲がBランク以上",f:c=>[atLeast(c.tot[1],"B"),needTo(c.tot[1],"B")]},
+  {name:"アイデアマン",type:"blue",up:"ひらめき",txt:"創造欲がBランク以上",f:c=>[atLeast(c.tot[2],"B"),needTo(c.tot[2],"B")]},
+  {name:"探検家",type:"blue",up:"旅人",txt:"冒険欲がBランク以上",f:c=>[atLeast(c.tot[3],"B"),needTo(c.tot[3],"B")]},
+  {name:"パパの鑑",type:"blue",up:"子煩悩",txt:"育児欲がBランク以上",f:c=>[atLeast(c.tot[4],"B"),needTo(c.tot[4],"B")]},
+  {name:"社交家",type:"blue",up:"人たらし",txt:"交流欲がBランク以上",f:c=>[atLeast(c.tot[5],"B"),needTo(c.tot[5],"B")]},
+  {name:"仕事人",type:"blue",txt:"仕事欲がCランク以上",f:c=>[atLeast(c.tot[0],"C"),needTo(c.tot[0],"C")]},
+  {name:"闘争心",type:"blue",txt:"暴力欲がCランク以上",f:c=>[atLeast(c.tot[1],"C"),needTo(c.tot[1],"C")]},
+  {name:"ひらめき",type:"blue",txt:"創造欲がCランク以上",f:c=>[atLeast(c.tot[2],"C"),needTo(c.tot[2],"C")]},
+  {name:"旅人",type:"blue",txt:"冒険欲がCランク以上",f:c=>[atLeast(c.tot[3],"C"),needTo(c.tot[3],"C")]},
+  {name:"子煩悩",type:"blue",txt:"育児欲がCランク以上",f:c=>[atLeast(c.tot[4],"C"),needTo(c.tot[4],"C")]},
+  {name:"人たらし",type:"blue",txt:"交流欲がCランク以上",f:c=>[atLeast(c.tot[5],"C"),needTo(c.tot[5],"C")]},
+  {name:"継続は力",type:"blue",txt:"1週間毎日、30pt振り分け",f:c=>W(c.best,7)},
+  {name:"オールラウンダー",type:"blue",txt:"6つすべてDランク以上",f:c=>[c.tot.every(v=>v>=140),`${c.tot.filter(v=>v>=140).length}/6`]},
+  {name:"一点集中",type:"blue",txt:"1週間のうち5日、1つの欲に20pt以上",f:c=>W(c.focus,5)},
+  // 青特（タスク：1週間のうち何日）
+  {name:"打撃職人",type:"blue",txt:"1週間のうち3日、キックボクシング",f:c=>T(c,0,3)},
+  {name:"寝技師",type:"blue",txt:"1か月に3回以上、グラップリング",f:c=>[c.tc[1]>=3,`${c.tc[1]}/3回`]},
+  {name:"後継者の自覚",type:"blue",txt:"1週間のうち4日、白水研修",f:c=>T(c,2,4)},
+  {name:"敏腕コンサル",type:"blue",txt:"1週間のうち5日、コンサル業務",f:c=>T(c,3,5)},
+  {name:"イクメン",type:"blue",txt:"1週間毎日、ミルクとおむつ交換",f:c=>T(c,4,7)},
+  {name:"おかまる食堂",type:"blue",txt:"1週間のうち4日、料理",f:c=>T(c,5,4)},
+  {name:"英語漬け",type:"blue",txt:"1週間のうち5日、英語学習",f:c=>T(c,6,5)},
+  {name:"シネフィル",type:"blue",txt:"1週間のうち4日、動画鑑賞",f:c=>T(c,7,4)},
+  {name:"酒場の顔",type:"blue",txt:"1週間のうち3日、飲み",f:c=>T(c,8,3)},
+  {name:"ととのい",type:"blue",txt:"1週間のうち2日、サウナ",f:c=>T(c,9,2)},
+  {name:"ナイスショット",type:"blue",txt:"1週間のうち2日、ゴルフ",f:c=>T(c,10,2)},
+  {name:"雪山の住人",type:"blue",txt:"1週間のうち2日、スノーボード",f:c=>T(c,11,2)},
+  {name:"渡り鳥",type:"blue",txt:"1週間のうち3日、旅行",f:c=>T(c,12,3)},
+  {name:"コツコツ",type:"blue",txt:"1週間のうち5日、自主トレーニング",f:c=>T(c,13,5)},
+  {name:"お風呂当番",type:"blue",txt:"1週間のうち6日、お風呂",f:c=>T(c,14,6)},
+  {name:"専属ドライバー",type:"blue",txt:"1週間のうち3日以上、運転・送迎",f:c=>T(c,16,3)},
+  {name:"欲張り",type:"blue",txt:"1週間のうち3日、1日5つ以上のタスク",f:c=>W(c.many,3)},
+  // 青特（組み合わせ・生活スタイル）
+  {name:"働き者",type:"blue",txt:"1週間のうち5日、コンサル業務か白水研修",f:c=>W(c.any([2,3]),5)},
+  {name:"体育会系",type:"blue",txt:"1週間のうち6日、運動系（キック・グラップリング・自主トレ・ゴルフ・スノボ）",f:c=>W(c.any([0,1,13,10,11]),6)},
+  {name:"マイホームパパ",type:"blue",txt:"1週間のうち3日、ミルクとおむつ交換・お風呂・料理を全部同じ日に",f:c=>W(c.wk(d=>c.has(d,[4])&&c.has(d,[14])&&c.has(d,[5])),3)},
+  {name:"学びの虫",type:"blue",txt:"1週間のうち3日、英語学習と白水研修を同じ日に",f:c=>W(c.both([6],[2]),3)},
+  {name:"静と動",type:"blue",txt:"1週間のうち2日、サウナと格闘技（キック・グラップリング・自主トレ）を同じ日に",f:c=>W(c.both([9],[0,1,13]),2)},
+  {name:"接待上手",type:"blue",txt:"1か月に1回、ゴルフと飲みを同じ日に",f:c=>{const k=c.comboMonth([10],[8]);return [k>=1,`${k}/1回`];}},
+  {name:"家族サービス",type:"blue",txt:"1か月に2回、旅行の日に育児系（ミルク・お風呂・料理）も",f:c=>{const k=c.comboMonth([12],[4,5,14]);return [k>=2,`${k}/2回`];}},
+  {name:"ゲーマー",type:"blue",txt:"1週間のうち4日、ゲーム",f:c=>T(c,15,4)},
+  {name:"多趣味",type:"blue",txt:"1か月に10種類以上のタスク",f:c=>[c.distinctMonth>=10,`${c.distinctMonth}/10種類`]},
+  {name:"何でも屋",type:"blue",txt:"1週間で7種類以上のタスク",f:c=>[c.distinctWeek>=7,`最多${c.distinctWeek}/7種類`]},
+  {name:"バランサー",type:"blue",txt:"1週間のうち5日、4つ以上の欲に振り分け",f:c=>W(c.wk(d=>dayVals(d).filter(v=>v>0).length>=4),5)},
+  {name:"全振り",type:"blue",txt:"1か月に3日、1つの欲に30pt全振り",f:c=>[c.allIn>=3,`${c.allIn}/3日`]},
+  {name:"週末戦士",type:"blue",txt:"1か月に土日のうち4日、アクティブ系（キック・グラップリング・ゴルフ・スノボ・旅行）",f:c=>[c.weekendActive>=4,`${c.weekendActive}/4日`]},
+  {name:"三拠点生活",type:"blue",txt:"1か月で四谷・荻窪・草加のすべてで過ごす",f:c=>[c.placesUsed>=3,`${c.placesUsed}/3か所`]},
+  {name:"旅の達人",type:"blue",txt:"1か月に「その他」で3か所以上の土地へ",f:c=>[c.otherUniq>=3,`${c.otherUniq}/3か所`]},
+  // 青特（場所：1週間のうち何日）
+  {name:"四谷の主",type:"blue",txt:"1週間のうち6日、四谷",f:c=>W(c.pw[0],6)},
+  {name:"荻窪の住人",type:"blue",txt:"1週間のうち3日、荻窪",f:c=>W(c.pw[1],3)},
+  {name:"草加の顔",type:"blue",txt:"1週間のうち3日、草加",f:c=>W(c.pw[2],3)},
+  {name:"風来坊",type:"blue",txt:"1週間のうち3日、「その他」の土地",f:c=>W(c.pw[3],3)},
+  // 赤特（マイナス）
+  {name:"三日坊主",type:"red",txt:"1週間のうち3日、未入力",f:c=>W(c.gap,3)},
+  {name:"飲みすぎ注意",type:"red",txt:"1週間のうち5日、飲み",f:c=>T(c,8,5)},
+  {name:"動画漬け",type:"red",txt:"1週間のうち6日、動画鑑賞",f:c=>T(c,7,6)},
+  {name:"運動不足",type:"red",txt:"入力した7日間で、運動系（キック・グラップリング・自主トレ・ゴルフ・スノボ）が0日",f:c=>[c.entE(d=>!c.has(d,[0,1,13,10,11]))>=7,""]},
+  {name:"家族不足",type:"red",txt:"1週間のうち4日以上、育児系（ミルク・お風呂・料理）なし",f:c=>{const k=c.entE(d=>!c.has(d,[4,5,14]));return [k>=4,`最多${k}/4日`];}},
+  {name:"休み下手",type:"red",txt:"1週間毎日、コンサル業務か白水研修",f:c=>W(c.any([2,3]),7)},
+  {name:"ゲーム廃人",type:"red",txt:"1週間のうち6日、ゲーム",f:c=>T(c,15,6)},
+  {name:"マンネリ",type:"red",txt:"まったく同じタスクの組み合わせが7日連続",f:c=>[c.sameRun>=7,`最長${c.sameRun}日`]},
+  {name:"中途半端",type:"red",txt:"1週間のうち3日、30ptを振り切らずに終わる",f:c=>[c.entE(d=>sum(dayVals(d))<DAILY)>=3,""]},
+  {name:"一本足打法",type:"red",txt:"1つの欲に全体の6割以上を振る（10日入力後）",f:c=>[c.entered>=10&&c.topShare>=0.6,`${Math.round(c.topShare*100)}%`]},
+  {name:"仕事中毒",type:"red",txt:"仕事欲B以上で育児欲がF以下（10日入力後）",f:c=>[c.entered>=10&&c.tot[0]>=250&&c.tot[4]<100,""]},
+  {name:"引きこもり",type:"red",txt:"冒険欲と交流欲がともにG（10日入力後）",f:c=>[c.entered>=10&&c.tot[3]<60&&c.tot[5]<60,""]},
+  {name:"偏食家",type:"red",txt:"Gランクが4つ以上（15日入力後）",f:c=>[c.entered>=15&&c.gCount>=4,`G×${c.gCount}`]},
+  {name:"ペチョキング",type:"red",txt:"キックボクシングを3日以上連続",f:c=>{const k=c.run([0]);return [k>=3,`最長${k}/3日連続`];}},
+];
+
+function renderSkills(){
+  const c=context();
+  const res=SKILLS.map(s=>{ const [ok,prog]=s.f(c); return {...s,ok,prog}; });
+  const goldUp=new Set(res.filter(s=>s.ok&&s.up).flatMap(s=>[].concat(s.up)));
+  const got=res.filter(s=>s.ok&&!goldUp.has(s.name));
+  const order={gold:0,blue:1,red:2};
+  got.sort((a,b)=>order[a.type]-order[b.type]);
+  const box=document.getElementById("skills");
+  box.innerHTML=got.length?got.map(s=>`<div class="chip ${s.type}" title="${s.txt}">${s.name}</div>`).join("")
+    :`<div class="skill-empty">まだ特殊能力はありません。振り分けを続けると取得できます</div>`;
+  const g=got.filter(s=>s.type==="gold").length, b=got.filter(s=>s.type==="blue").length, r=got.filter(s=>s.type==="red").length;
+  document.getElementById("skillNote").textContent=`金${g}・青${b}・赤${r}`;
+  const groups=[["gold","金特"],["blue","青特"],["red","赤特（マイナス）"]];
+  document.getElementById("condList").innerHTML=groups.map(([type,label])=>
+    `<div class="cond-group">${label}</div>`+res.filter(s=>s.type===type).map(s=>{
+      const st=s.ok?(s.type==="red"?`<span class="st bad">発動中</span>`:`<span class="st ok">取得</span>`):`<span class="st">${s.prog||"未取得"}</span>`;
+      return `<div class="cond"><div class="chip ${s.ok?s.type:"lock"}">${s.name}</div><div class="txt">${s.txt}</div>${st}</div>`;
+    }).join("")).join("");
+}
+
+/* ---------- 月末予測：入力した日の1日平均で残りの日も進んだ場合 ---------- */
+function renderProjection(){
+  const body=document.getElementById("projBody"), empty=document.getElementById("projEmpty"), emptyT=document.getElementById("projEmptyText");
+  const note=document.getElementById("projNote");
+  const n=daysIn(), md=monthData();
+  const isThis=viewY===now.getFullYear()&&viewM===now.getMonth();
+  const isFuture=new Date(viewY,viewM,1)>new Date(now.getFullYear(),now.getMonth(),1);
+  const show=(msg)=>{ lastProj=null; body.hidden=true; empty.hidden=false; emptyT.textContent=msg; note.textContent=""; };
+  if(isFuture) return show("この月はまだ始まっていません");
+  if(!isThis) return show("過去の月なので、上の能力がそのまま月末の結果です");
+  const entered=[]; for(let d=1;d<=n;d++) if(sum(dayVals(d))>0) entered.push(d);
+  if(!entered.length) return show("振り分けを入力すると、月末の予測が出ます");
+  const today=now.getDate();
+  let rem=0; for(let d=today;d<=n;d++) if(sum(dayVals(d))===0) rem++;
+  const avg=[0,0,0,0,0,0]; entered.forEach(d=>dayVals(d).forEach((v,i)=>avg[i]+=v));
+  avg.forEach((v,i)=>avg[i]=v/entered.length);
+  const cur=totals();
+  const proj=cur.map((v,i)=>Math.round(v+avg[i]*rem));
+  lastProj={cur,proj,rem,avg,entered:entered.length,today,n};
+  body.hidden=false; empty.hidden=true;
+  note.textContent=`入力${entered.length}日の平均で残り${rem}日を計算`;
+  drawRadar(proj,"projRadar",cur);
+  const rows=document.getElementById("projRows"); rows.innerHTML="";
+  proj.forEach((v,i)=>{
+    const r0=rankOf(cur[i]), r1=rankOf(v), rise=RANK_ORDER.indexOf(r1)>RANK_ORDER.indexOf(r0);
+    const d=document.createElement("div"); d.className="prow"+(rise?" rise":"");
+    d.innerHTML=`<span class="sname">${PARAMS[i]}</span><span class="flow"><span class="rk r${r0}">${r0}</span>→<span class="rk r${r1}">${r1}</span>${rise?'<span class="up">UP</span>':""}</span><span class="pv num">${v}</span>`;
+    rows.appendChild(d);
+  });
+  // 予測の能力値で、ランクで決まる特殊能力がどうなるか
+  const c=context(); const cNow=SKILLS.map(s=>s.f(c)[0]);
+  const cp={...c,tot:proj,aCount:proj.filter(v=>v>=330).length,gCount:proj.filter(v=>v<60).length,entered:n};
+  const gain=SKILLS.filter((s,k)=>!cNow[k]&&s.f(cp)[0]);
+  const good=gain.filter(s=>s.type!=="red"), bad=gain.filter(s=>s.type==="red");
+  const chips=l=>l.map(s=>`<div class="chip ${s.type}" title="${s.txt}">${s.name}</div>`).join("");
+  document.getElementById("projSkills").innerHTML=
+    (good.length?`<h3>このペースで取れそうな特殊能力</h3><div class="skills">${chips(good)}</div>`:`<h3>このペースで新しく取れる特殊能力はまだありません</h3>`)+
+    (bad.length?`<h3 style="color:var(--rB)">このままだと付きそうな赤特</h3><div class="skills">${chips(bad)}</div>`:"");
+}
+
+/* ---------- コーチに相談（予測をもとにClaudeが行動を提案） ---------- */
+let lastProj=null, turns=[], askCtl=null, asking=false;
+function consultContext(){
+  const p=lastProj; if(!p) return "";
+  const rk=v=>rankOf(v);
+  const nxt=v=>{ const r=nextRank(v); return r?`${r[0]}まであと${r[1]-v}`:"最高ランク"; };
+  const params=PARAMS.map((n,i)=>`- ${n}: 現在${p.cur[i]}(${rk(p.cur[i])}) / 月末予測${p.proj[i]}(${rk(p.proj[i])}) / 1日平均${p.avg[i].toFixed(1)}pt / 予測から${nxt(p.proj[i])}`).join("\n");
+  const tasks=TASKS.map(t=>`- ${t.name}: `+t.w.map((x,i)=>x?`${PARAMS[i].replace("欲","")}${x}`:null).filter(Boolean).join("・")+(t.light?"（影響小）":"")).join("\n");
+  const places=PLACES.map((pl,i)=>`- ${pl.name}: ${i===3?"入力した土地をAIが判定（既定は冒険・交流）":pl.boost.map(k=>PARAMS[k]).join("と")}が1.5倍`).join("\n");
+  const c=context();
+  const res=SKILLS.map(s=>{ const [ok,prog]=s.f(c); return {s,ok,prog}; });
+  const got=res.filter(r=>r.ok).map(r=>`${r.s.name}(${r.s.type==="red"?"赤":r.s.type==="gold"?"金":"青"})`).join("、")||"なし";
+  const todo=res.filter(r=>!r.ok).map(r=>`- [${r.s.type==="red"?"赤":r.s.type==="gold"?"金":"青"}] ${r.s.name}: ${r.s.txt}${r.prog?`（現在 ${r.prog}）`:""}`).join("\n");
+  const recent=[]; for(let d=Math.max(1,p.today-6);d<=p.today;d++){ const l=(((taskData[mkey()]||{})[d])||[]).map(t=>TASKS[t].name).concat((((customData[mkey()]||{})[d])||[]).filter(n=>customLib[n]).map(n=>`${n}(自由入力:${wText(customLib[n].w)})`)); if(l.length) recent.push(`${d}日: ${l.join("、")}`); }
+  return `【おかまるパワプロの現在】${viewY}年${viewM+1}月${p.today}日。月${p.n}日、入力済み${p.entered}日、残りの未入力日${p.rem}日。
+ルール: 毎日30ptを6つの欲に振り分け。値=初期値10+振ったpt。ランク: A330〜 B250〜 C190〜 D140〜 E100〜 F60〜 G10〜。
+振り分けは、その日に選んだタスクの配分（各合計10）を足し合わせて30ptに換算する。場所を選ぶとその場所の2つの欲の配分が1.5倍。タスクを1つだけ選んだ日は、その配分の比率でそのまま30ptになる。
+パラメータ:
+${params}
+タスクの配分:
+${tasks}
+場所:
+${places}
+直近7日のタスク:
+${recent.join("\n")||"記録なし"}
+取得済みの特殊能力: ${got}
+未取得の特殊能力と条件（「1週間のうち」は月内の任意の7日間）:
+${todo}`;
+}
+const COACH_RULES=`あなたは自分育成ゲーム「おかまるパワプロ」のコーチです。プレイヤーの相談に、下のデータだけを根拠に答えてください。
+答え方:
+- 日本語で、スマホで読みやすく250字程度まで。最初に結論。
+- 「残り何日のうち、どのタスクを何日・どの場所で」のように具体的な行動を示し、必要なptの計算を一言添える。
+- 取れそうな特殊能力があれば名前と条件を添える。
+- 表や見出しは使わず、箇条書きは「・」で短く。
+- データにないことを推測で断言しない。無理な目標は無理と伝え、現実的な代案を出す。`;
+
+async function ask(q){
+  q=q.trim(); if(!q||asking||!lastProj) return;
+  const sample=await samplePromise; if(!sample) return;
+  const chat=document.getElementById("chat"), box=document.getElementById("askBox");
+  const me=document.createElement("div"); me.className="msg me"; me.textContent=q; chat.appendChild(me);
+  const out=document.createElement("div"); out.className="msg coach"; out.textContent="考え中…"; chat.appendChild(out);
+  box.value=""; turns.push({role:"user",content:q}); turns=turns.slice(-8);
+  setAsking(true); askCtl=new AbortController();
+  const input=[{role:"user",content:COACH_RULES+"\n\n"+consultContext()},...turns];
+  try{
+    const {text}=await sample(input,{cache:false,signal:askCtl.signal,onText:({text})=>{ out.textContent=text; }});
+    out.textContent=text; turns.push({role:"assistant",content:text});
+  }catch(e){
+    turns.pop();
+    if(e&&e.code==="cancelled"){ out.textContent=e.text||"止めました"; }
+    else{
+      out.classList.add("err");
+      out.textContent=(e&&e.text?e.text+"\n\n":"")+(e&&e.code==="not_granted"?"相談が許可されませんでした。":e&&e.code==="rate_limited"?"混み合っています。少し待ってからもう一度どうぞ。":"うまく答えられませんでした。もう一度どうぞ。");
+      if(e&&(e.code==="not_granted"||e.code==="sampling_disabled")) document.getElementById("consult").hidden=true;
+    }
+  }finally{ setAsking(false); }
+}
+function setAsking(on){
+  asking=on;
+  document.getElementById("askBtn").disabled=on;
+  document.getElementById("stopBtn").hidden=!on;
+  document.querySelectorAll(".qchip").forEach(b=>b.disabled=on);
+}
+document.getElementById("askBtn").onclick=()=>ask(document.getElementById("askBox").value);
+document.getElementById("stopBtn").onclick=()=>askCtl?.abort();
+document.getElementById("askBox").addEventListener("keydown",e=>{ if(e.key==="Enter"&&(e.metaKey||e.ctrlKey)){ e.preventDefault(); ask(e.target.value); } });
+document.querySelectorAll(".qchip").forEach(b=>b.onclick=()=>ask(b.dataset.q));
+samplePromise.then(s=>{ if(s) document.getElementById("consult").hidden=false; });
+
+function renderAll(){
+  document.getElementById("monthLabel").textContent=`${viewY}年${viewM+1}月`;
+  if(selDay>daysIn()) selDay=daysIn();
+  const vals=totals();
+  drawRadar(vals); renderStats(vals); renderSkills(); renderPlaces(); renderTasks(); renderAlloc(); renderCal(); renderProjection();
+}
+
+function moveMonth(delta){
+  viewM+=delta; if(viewM<0){viewM=11;viewY--;} if(viewM>11){viewM=0;viewY++;}
+  const isThis=viewY===now.getFullYear()&&viewM===now.getMonth();
+  selDay=isThis?now.getDate():1; renderAll();
+}
+document.getElementById("prev").onclick=()=>moveMonth(-1);
+document.getElementById("next").onclick=()=>moveMonth(1);
+document.getElementById("goToday").onclick=()=>{ viewY=now.getFullYear(); viewM=now.getMonth(); selDay=now.getDate(); renderAll(); };
+document.getElementById("clearDay").onclick=()=>{ const m=taskData[mkey()]; if(m){ delete m[selDay]; saveTasks(); } const pm=placeData[mkey()]; if(pm){ delete pm[selDay]; savePlace(); } const cm=customData[mkey()]; if(cm){ delete cm[selDay]; saveCustom(); } setDay([0,0,0,0,0,0]); };
+document.getElementById("copyPrev").onclick=()=>{
+  let src=null;
+  if(selDay>1) src=monthData()[selDay-1];
+  else { const pm=viewM===0?`${viewY-1}-12`:`${viewY}-${String(viewM).padStart(2,"0")}`; src=(data[pm]||{})[new Date(viewY,viewM,0).getDate()]; }
+  if(src) setDay([...src]);
+};
+
+const splitBox=document.getElementById("splitBox");
+try{ splitBox.open=S.get(KEY+":splitOpen")==="1"; }catch(e){}
+splitBox.addEventListener("toggle",()=>{ try{ S.set(KEY+":splitOpen",splitBox.open?"1":"0"); }catch(e){} });
+renderRanks(); renderPicks(); renderWeightTable(); renderAll();
+}
+(async()=>{ await S.init(); __app(); })();
+if("serviceWorker" in navigator && location.protocol!=="file:"){
+  window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+}
+// ホーム画面アプリは開きっぱなしになるので、日付が変わってから戻ってきたら今日に合わせて読み直す
+const OPENED_ON=new Date().toDateString();
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible"&&new Date().toDateString()!==OPENED_ON) location.reload(); });
+</script>
+
+
+</body></html>

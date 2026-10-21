@@ -1,0 +1,17 @@
+{
+  "name": "おかまるパワプロ",
+  "short_name": "パワプロ",
+  "description": "毎日30ptを6つの欲に振り分けて自分を育てる",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0c2f6b",
+  "theme_color": "#0c2f6b",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
