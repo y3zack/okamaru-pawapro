@@ -1,0 +1,858 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>診断士合格ノート</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="theme-color" content="#1f6b52">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="診断士ノート">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Shippori+Mincho+B1:wght@700;800&display=swap">
+<style>
+/* Layout: マークシートの答案用紙をモチーフにした1カラム。上に試験までの日数、下にタブ。選択肢は ア〜エ の楕円マーク */
+:root{
+  --paper:#f4f6f3; --sheet:#ffffff; --ink:#1b2a25; --muted:#5d6c66; --rule:#d5ddd8; --rule-strong:#b9c6bf;
+  --accent:#1f6b52; --accent-ink:#ffffff; --accent-soft:#e2efe8; --mark:#2b3a35;
+  --good:#1f7a4d; --good-soft:#e1f2e8; --bad:#b4442c; --bad-soft:#f8e6e1; --warn:#9a6a12; --warn-soft:#f6eedb;
+  --f-display:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho",serif;
+  --f-body:"BIZ UDPGothic","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  --f-num:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#111816; --sheet:#18211e; --ink:#e4ebe7; --muted:#9aaba4; --rule:#2b3833; --rule-strong:#3c4c46;
+  --accent:#5fbf95; --accent-ink:#0d1a15; --accent-soft:#1c3329; --mark:#d8e3de;
+  --good:#6ccf99; --good-soft:#183326; --bad:#ec8a72; --bad-soft:#3a201a; --warn:#e2b75e; --warn-soft:#352a14;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --paper:#111816; --sheet:#18211e; --ink:#e4ebe7; --muted:#9aaba4; --rule:#2b3833; --rule-strong:#3c4c46;
+  --accent:#5fbf95; --accent-ink:#0d1a15; --accent-soft:#1c3329; --mark:#d8e3de;
+  --good:#6ccf99; --good-soft:#183326; --bad:#ec8a72; --bad-soft:#3a201a; --warn:#e2b75e; --warn-soft:#352a14;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{background:var(--paper)}
+body{margin:0;color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.7;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3{font-family:var(--f-display);font-weight:800;line-height:1.35;text-wrap:balance;margin:0}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+.wrap{max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* header */
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--sheet)}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:var(--sheet);border-bottom:1px solid var(--rule)}
+.top-in{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:10px}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.seal{width:34px;height:34px;flex:none;border:2px solid var(--accent);color:var(--accent);border-radius:6px;display:grid;place-items:center;font-family:var(--f-display);font-weight:800;font-size:18px}
+.brand-name{font-family:var(--f-display);font-weight:800;font-size:17px;line-height:1.2}
+.brand-sub{font-size:12px;color:var(--muted)}
+.count{text-align:right;line-height:1.1}
+.count b{font-family:var(--f-num);font-size:24px;color:var(--accent)}
+.count small{display:block;font-size:11px;color:var(--muted)}
+
+main{padding-block:16px 110px}
+.stack{display:flex;flex-direction:column;gap:16px}
+
+/* sheet panels */
+.sheet{background:var(--sheet);border:1px solid var(--rule);border-radius:var(--r);padding:16px}
+.sheet>h2{font-size:18px;margin-bottom:10px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.sheet>h2 .sub{font-family:var(--f-body);font-weight:400;font-size:12px;color:var(--muted)}
+.label{font-size:11px;letter-spacing:.08em;color:var(--muted);font-weight:700}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.between{justify-content:space-between}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+
+/* buttons */
+.btn{appearance:none;border:1px solid var(--rule-strong);background:var(--sheet);border-radius:8px;padding:9px 14px;cursor:pointer;font-weight:700;font-size:14px;line-height:1.3;display:inline-flex;align-items:center;gap:6px;text-decoration:none}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--accent);padding-inline:6px}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+.btn.wide{width:100%;justify-content:center;padding-block:12px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.chip{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--rule-strong);border-radius:999px;padding:3px 10px;font-size:12px;font-weight:700;white-space:nowrap}
+.chip.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+button.chip{cursor:pointer;background:var(--sheet);font-size:13px;padding:6px 12px}
+button.chip.on{background:var(--accent)}
+.phase-input{background:var(--accent-soft);border-color:transparent;color:var(--accent)}
+.phase-practice{background:var(--warn-soft);border-color:transparent;color:var(--warn)}
+.phase-final{background:var(--bad-soft);border-color:transparent;color:var(--bad)}
+
+/* subject code */
+.code{font-family:var(--f-num);font-size:12px;font-weight:700;border:1.5px solid currentColor;border-radius:4px;padding:0 5px;color:var(--accent)}
+
+/* stats */
+.stat{border:1px solid var(--rule);border-radius:8px;padding:10px 12px}
+.stat .v{font-family:var(--f-num);font-size:22px;font-weight:700;line-height:1.2}
+.stat .v small{font-size:12px;color:var(--muted);font-weight:400;margin-left:2px}
+.bar{height:8px;background:var(--rule);border-radius:99px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.bar.warn>i{background:var(--warn)}
+
+/* lists */
+.list{display:flex;flex-direction:column}
+.item{display:flex;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--rule);min-width:0}
+.item:first-child{border-top:0}
+.item .grow{flex:1;min-width:0}
+.item .t{font-weight:700}
+button.item{appearance:none;background:none;border-left:0;border-right:0;border-bottom:0;width:100%;text-align:left;cursor:pointer}
+button.item:first-child{border-top:0}
+.check{width:22px;height:22px;flex:none;border:2px solid var(--rule-strong);border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;background:var(--sheet);cursor:pointer;padding:0}
+.check.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+
+/* notes */
+.note{font-size:15px}
+.note p{margin:.4em 0 .8em}
+.note ul{margin:.3em 0 .8em;padding-left:1.3em}
+.note li{margin:.25em 0}
+.note li ul{margin:.2em 0}
+.note b{color:var(--accent)}
+.note .f{font-family:var(--f-num);font-size:.92em;background:var(--accent-soft);border-radius:4px;padding:1px 5px;white-space:normal}
+.note .tip{border-left:3px solid var(--warn);background:var(--warn-soft);padding:8px 12px;border-radius:0 6px 6px 0;font-size:14px;margin:10px 0}
+.tbl{overflow-x:auto;margin:8px 0 12px}
+.tbl table{border-collapse:collapse;font-size:13.5px;min-width:100%}
+.tbl th,.tbl td{border:1px solid var(--rule-strong);padding:6px 8px;text-align:left;vertical-align:top}
+.tbl th{background:var(--accent-soft);white-space:nowrap}
+
+/* quiz: mark sheet */
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.qno{font-family:var(--f-display);font-size:20px;font-weight:800}
+.qtext{font-size:16px;line-height:1.8;margin:12px 0 16px}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{appearance:none;display:flex;align-items:flex-start;gap:12px;text-align:left;background:var(--sheet);border:1px solid var(--rule);border-radius:8px;padding:12px;cursor:pointer;width:100%;line-height:1.6}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt:disabled{cursor:default}
+.bubble{flex:none;width:30px;height:20px;border:1.5px solid var(--mark);border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;margin-top:2px}
+.opt.picked .bubble{background:var(--mark);color:var(--sheet)}
+.opt.right{border-color:var(--good);background:var(--good-soft)}
+.opt.right .bubble{border-color:var(--good)}
+.opt.right.picked .bubble{background:var(--good);color:var(--sheet)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.opt.wrong .bubble{background:var(--bad);border-color:var(--bad);color:var(--sheet)}
+.verdict{border-radius:8px;padding:12px 14px;margin-top:14px}
+.verdict.ok{background:var(--good-soft)}
+.verdict.ng{background:var(--bad-soft)}
+.verdict b{font-family:var(--f-display);font-size:17px}
+.verdict.ok b{color:var(--good)}
+.verdict.ng b{color:var(--bad)}
+
+/* score gauge */
+.gauge{position:relative;height:14px;background:var(--rule);border-radius:99px;margin:26px 0 8px}
+.gauge>i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:var(--accent)}
+.gauge .ln{position:absolute;top:-6px;bottom:-6px;width:2px;background:var(--ink)}
+.gauge .ln span{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);font-size:11px;white-space:nowrap;color:var(--muted)}
+.big{font-family:var(--f-num);font-size:44px;font-weight:700;line-height:1}
+
+/* heatmap */
+.heat{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,1fr);gap:3px;overflow-x:auto;padding-bottom:4px}
+.heat i{width:14px;height:14px;border-radius:3px;background:var(--rule);display:block}
+.heat i.l1{background:var(--accent);opacity:.3}
+.heat i.l2{background:var(--accent);opacity:.55}
+.heat i.l3{background:var(--accent);opacity:.8}
+.heat i.l4{background:var(--accent)}
+.heat i.today{outline:2px solid var(--ink);outline-offset:1px}
+
+/* plan */
+.timeline{display:flex;height:30px;border-radius:6px;overflow:hidden;font-size:12px;font-weight:700}
+.timeline>div{display:grid;place-items:center;min-width:0;overflow:hidden;white-space:nowrap}
+.week{display:grid;grid-template-columns:auto 1fr auto;gap:4px 12px;padding:10px 0;border-top:1px solid var(--rule);align-items:center}
+.week:first-child{border-top:0}
+.week.now{background:var(--accent-soft);margin-inline:-16px;padding-inline:16px}
+.week .wd{font-family:var(--f-num);font-size:12px;color:var(--muted);white-space:nowrap}
+.week .wc{min-width:0;font-size:13.5px}
+.week .wh{font-family:var(--f-num);font-size:12px;white-space:nowrap}
+
+/* forms */
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field input,.field select{border:1px solid var(--rule-strong);background:var(--sheet);border-radius:8px;padding:8px 10px;width:100%}
+textarea{width:100%;min-height:90px;border:1px solid var(--rule-strong);background:var(--sheet);border-radius:8px;padding:8px;font-family:var(--f-num);font-size:12px}
+.toggle{display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer}
+.toggle input{width:18px;height:18px;accent-color:var(--accent)}
+
+/* tabs */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:9;background:var(--sheet);border-top:1px solid var(--rule);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+.tabs-in{max-width:760px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr)}
+.tab{appearance:none;background:none;border:0;padding:8px 2px 10px;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;color:var(--muted);font-size:11px;font-weight:700}
+.tab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tab.on{color:var(--accent)}
+
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:8px 16px;border-radius:99px;font-size:13px;z-index:20;max-width:calc(100% - 32px)}
+details summary{cursor:pointer}
+@media (prefers-reduced-motion:no-preference){.opt,.btn,.check{transition:background .12s,border-color .12s}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap top-in">
+  <div class="brand"><span class="seal" aria-hidden="true">診</span><div><div class="brand-name">診断士合格ノート</div><div class="brand-sub" id="examLabel"></div></div></div>
+  <div class="count" id="countdown"></div>
+</div></header>
+<main class="wrap" id="view"></main>
+<nav class="tabs" aria-label="メニュー"><div class="tabs-in">
+  <button class="tab" data-tab="home"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>今日</button>
+  <button class="tab" data-tab="plan"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>計画</button>
+  <button class="tab" data-tab="learn"><svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5M9 7h6"/></svg>学習</button>
+  <button class="tab" data-tab="test"><svg viewBox="0 0 24 24"><ellipse cx="7" cy="7" rx="3" ry="2"/><ellipse cx="7" cy="13" rx="3" ry="2"/><ellipse cx="7" cy="19" rx="3" ry="2"/><path d="M13 7h7M13 13h7M13 19h7"/></svg>テスト</button>
+  <button class="tab" data-tab="log"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>記録</button>
+</div></nav>
+<div class="toast" id="toast" hidden></div>
+
+<script src="data.js"></script>
+<script>
+(function(){
+"use strict";
+const SUBJ = window.SUBJECTS, QS = window.QUESTIONS;
+const SUBJ_BY = Object.fromEntries(SUBJ.map(s => [s.id, s]));
+const UNIT_BY = {};
+SUBJ.forEach(s => s.units.forEach(u => { u.subj = s.id; UNIT_BY[u.id] = u; }));
+QS.forEach(q => { q.s = UNIT_BY[q.u].subj; });
+// 学習を始める順（2次試験に直結する財務・企業経営理論から。中小企業は白書が出る春以降に回す）
+const PLAN_ORDER = ["fin","mgt","ops","eco","it","law","sme"];
+const KANA = ["ア","イ","ウ","エ"];
+const DOW = ["日","月","火","水","木","金","土"];
+
+/* ---------- 日付 ---------- */
+const pad = n => String(n).padStart(2,"0");
+const ymd = d => d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const parse = s => { const [y,m,d] = String(s).split("-").map(Number); return new Date(y, (m||1)-1, d||1); };
+const addDays = (d,n) => { const x = new Date(d); x.setDate(x.getDate()+n); return x; };
+const diffDays = (a,b) => Math.round((parse(ymd(b)) - parse(ymd(a))) / 864e5);
+const today = () => parse(ymd(new Date()));
+const md = d => (d.getMonth()+1)+"/"+d.getDate();
+const fmtDate = d => d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日("+DOW[d.getDay()]+")";
+const isWeekend = d => d.getDay()===0 || d.getDay()===6;
+
+/* ---------- 保存 ---------- */
+const KEY = "shindanshi-note-v1";
+function defaults(){
+  return {
+    settings: { examDate: "2027-08-07", startDate: ymd(today()), weekdayMin: 120, weekendMin: 300, exempt: [] },
+    units: {}, answers: {}, sessions: [], logs: [], checks: {}, timer: null
+  };
+}
+function load(){
+  try { const raw = localStorage.getItem(KEY); if (raw){ const d = JSON.parse(raw); const base = defaults(); return Object.assign(base, d, { settings: Object.assign(base.settings, d.settings||{}) }); } } catch(e){}
+  return defaults();
+}
+let S = load();
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} }
+
+/* ---------- UI状態 ---------- */
+const UI = { tab:"home", subj:null, unit:null, quiz:null, result:null, setup:{ subj:"all", count:10, mode:"random" }, confirm:null, backupOpen:false };
+
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const $ = s => document.querySelector(s);
+function toast(msg){ const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(()=>{ t.hidden = true; }, 2200); }
+function shuffle(a){ a = a.slice(); for (let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; } return a; }
+const subjCode = s => `<span class="code">${SUBJ_BY[s].no}</span>`;
+
+/* ---------- 集計 ---------- */
+function minutesBy(filter){ return S.logs.filter(filter).reduce((a,l)=>a+l.min,0); }
+function dayMinutes(){ const m = {}; S.logs.forEach(l => { m[l.date] = (m[l.date]||0) + l.min; }); return m; }
+function streak(){
+  const m = dayMinutes(); let d = today(), n = 0;
+  if (!(m[ymd(d)] > 0)) d = addDays(d,-1);
+  while (m[ymd(d)] > 0){ n++; d = addDays(d,-1); }
+  return n;
+}
+function qStats(subj){
+  const qs = QS.filter(q => !subj || subj==="all" || q.s===subj);
+  let seen=0, n=0, ok=0, weak=0;
+  qs.forEach(q => { const a = S.answers[q.id]; if (a){ seen++; n+=a.n; ok+=a.ok; if (a.last==="ng") weak++; } });
+  return { total: qs.length, seen, n, ok, weak, rate: n ? ok/n : null };
+}
+function unitsDone(subj){ const s = SUBJ_BY[subj]; return s.units.filter(u => S.units[u.id]).length; }
+const fmtH = min => (min/60).toFixed(min>=600?0:1);
+const pct = r => r==null ? "—" : Math.round(r*100)+"%";
+
+function addLog(date, subj, min, src){
+  if (!(min > 0)) return;
+  if (src === "quiz"){
+    const l = S.logs.find(x => x.date===date && x.subj===subj && x.src==="quiz");
+    if (l){ l.min = Math.round((l.min + min)*10)/10; return; }
+  }
+  S.logs.push({ id: Date.now().toString(36)+Math.random().toString(36).slice(2,6), date, subj, min: Math.round(min*10)/10, src });
+}
+
+/* ---------- 学習計画 ---------- */
+function apportion(n, weights){
+  const sum = weights.reduce((a,b)=>a+b,0);
+  const raw = weights.map(w => w/sum*n);
+  const out = raw.map(Math.floor);
+  let left = n - out.reduce((a,b)=>a+b,0);
+  raw.map((r,i)=>[r-Math.floor(r),i]).sort((a,b)=>b[0]-a[0]).forEach(([,i]) => { if (left>0){ out[i]++; left--; } });
+  if (n >= weights.length){
+    out.forEach((v,i) => { if (v===0){ const j = out.indexOf(Math.max(...out)); out[j]--; out[i]++; } });
+  }
+  return out;
+}
+function buildPlan(){
+  const st = S.settings;
+  const start = parse(st.startDate), exam = parse(st.examDate);
+  const total = diffDays(start, exam);
+  const subs = PLAN_ORDER.map(id => SUBJ_BY[id]).filter(s => !st.exempt.includes(s.id));
+  if (!subs.length) return { error: "すべての科目が免除になっています。「科目合格（免除）」のチェックを見直してください。" };
+  if (!(total > 0)) return { error: "試験日が学習開始日より前になっています。試験日を見直してください。" };
+
+  const finalDays = total <= 14 ? total : Math.min(28, Math.max(7, Math.round(total*0.12)));
+  const rest = total - finalDays;
+  let inputDays = rest > 0 ? Math.max(Math.min(rest, subs.length), Math.round(rest*0.65)) : 0;
+  if (inputDays > rest) inputDays = rest;
+  const practiceDays = rest - inputDays;
+  const days = [];
+  const mk = (i, phase, subj, tasks) => { const date = addDays(start, i); days.push({ date, ds: ymd(date), phase, subj, tasks, min: isWeekend(date) ? st.weekendMin : st.weekdayMin }); };
+
+  // インプット期：科目ごとに日数を配分し、単元を順に割り当てる
+  const alloc = apportion(inputDays, subs.map(s => s.hours));
+  const blocks = [];
+  let i = 0;
+  subs.forEach((s, si) => {
+    const n = alloc[si]; if (!n) return;
+    const U = s.units.length, startI = i;
+    const firstDay = s.units.map((u,j) => Math.floor(j*n/U));
+    for (let k=0; k<n; k++){
+      const tasks = [];
+      const starting = s.units.filter((u,j) => firstDay[j]===k);
+      if (starting.length){
+        starting.forEach(u => { tasks.push({ type:"read", unit:u.id }); tasks.push({ type:"quiz", scope:"unit", unit:u.id }); });
+      } else {
+        const cur = s.units[Math.max(0, firstDay.filter(f => f<=k).length-1)];
+        tasks.push({ type:"review", unit:cur.id, text:"「"+cur.title+"」をテキスト・過去問で深掘り" });
+        tasks.push({ type:"quiz", scope:"subj", subj:s.id, count:10 });
+      }
+      if (k===n-1 && n>1) tasks.push({ type:"quiz", scope:"subj", subj:s.id, count:20, label:"科目まとめテスト" });
+      mk(i++, "input", s.id, tasks);
+    }
+    blocks.push({ subj:s.id, from:addDays(start,startI), to:addDays(start,i-1), days:n });
+  });
+
+  // 演習期：配分時間に比例して科目を回す（なめらかな重み付きラウンドロビン）
+  const cur = subs.map(() => 0), wsum = subs.reduce((a,s)=>a+s.hours,0);
+  const pStart = i;
+  for (let k=0; k<practiceDays; k++){
+    subs.forEach((s,j) => { cur[j] += s.hours; });
+    let best = 0; cur.forEach((v,j) => { if (v > cur[best]) best = j; });
+    cur[best] -= wsum;
+    const s = subs[best];
+    mk(i++, "practice", s.id, [
+      { type:"review", text:"過去問を年度別に1科目分解く（"+s.name+"）" },
+      { type:"quiz", scope:"subj", subj:s.id, count:20 },
+      { type:"weak", subj:s.id }
+    ]);
+  }
+  // 直前期：全科目を回しつつ、日曜は模擬テスト
+  const fStart = i;
+  for (let k=0; k<finalDays; k++){
+    const date = addDays(start, i);
+    const left = total - i;
+    if (left === 1){
+      mk(i++, "final", "all", [{ type:"weak", subj:"all" }, { type:"review", text:"公式・暗記事項を総チェック。早めに寝る" }]);
+    } else if (date.getDay() === 0){
+      mk(i++, "final", "all", [{ type:"quiz", scope:"all", count:40, label:"模擬テスト（全科目）" }, { type:"weak", subj:"all" }]);
+    } else {
+      const s = subs[k % subs.length];
+      mk(i++, "final", s.id, [{ type:"quiz", scope:"subj", subj:s.id, count:20 }, { type:"weak", subj:s.id }, { type:"review", text:"試験時間（"+s.minutes+"分）を計って過去問1年分" }]);
+    }
+  }
+  const capMin = days.reduce((a,d)=>a+d.min,0);
+  const needH = subs.reduce((a,s)=>a+s.hours,0);
+  return { days, blocks, start, exam, total, subs, capMin, needH,
+    phases: [
+      { key:"input", name:"インプット期", from:0, n:inputDays },
+      { key:"practice", name:"演習期", from:pStart, n:practiceDays },
+      { key:"final", name:"直前期", from:fStart, n:finalDays }
+    ].filter(p => p.n>0) };
+}
+const PHASE_NAME = { input:"インプット期", practice:"演習期", final:"直前期" };
+const taskKey = (ds, idx) => ds+"#"+idx;
+function taskDone(day, idx){
+  const t = day.tasks[idx];
+  if (t.type==="read") return !!S.units[t.unit];
+  return !!S.checks[taskKey(day.ds, idx)];
+}
+function taskText(t){
+  if (t.type==="read") return { t:"単元を読む：" + UNIT_BY[t.unit].title, a:`<button class="btn" data-act="openUnit" data-unit="${t.unit}">開く</button>` };
+  if (t.type==="quiz"){
+    if (t.scope==="unit") return { t:"確認テスト：" + UNIT_BY[t.unit].title, a:"テスト" };
+    if (t.scope==="all") return { t:t.label || ("全科目テスト "+t.count+"問"), a:"テスト" };
+    return { t:(t.label || "確認テスト") + "：" + SUBJ_BY[t.subj].short + " " + t.count + "問", a:"テスト" };
+  }
+  if (t.type==="weak") return { t:"間違えた問題の解き直し" + (t.subj==="all" ? "（全科目）" : "：" + SUBJ_BY[t.subj].short), a:"復習" };
+  return { t:t.text, a:null };
+}
+
+/* ---------- 画面 ---------- */
+function render(){
+  document.querySelectorAll(".tab").forEach(b => b.classList.toggle("on", b.dataset.tab===UI.tab));
+  renderHeader();
+  const v = $("#view");
+  v.innerHTML = ({ home:viewHome, plan:viewPlan, learn:viewLearn, test:viewTest, log:viewLog })[UI.tab]();
+}
+function renderHeader(){
+  const exam = parse(S.settings.examDate);
+  const n = diffDays(today(), exam);
+  $("#examLabel").textContent = "第1次試験 " + fmtDate(exam);
+  $("#countdown").innerHTML = n >= 0 ? `<small>試験まで</small><b>${n}</b> 日` : `<small>試験日を過ぎました</small><b>—</b>`;
+}
+
+function viewHome(){
+  const plan = buildPlan();
+  const td = ymd(today());
+  let todayBlock;
+  if (plan.error){
+    todayBlock = `<p>${esc(plan.error)}</p><button class="btn" data-act="tab" data-tab="plan">計画を設定する</button>`;
+  } else {
+    const idx = plan.days.findIndex(d => d.ds===td);
+    if (idx < 0){
+      const before = today() < plan.start;
+      todayBlock = before
+        ? `<p>学習開始日（${fmtDate(plan.start)}）から計画が始まります。それまでは好きな科目から始めてかまいません。</p>`
+        : `<p>試験日を過ぎています。次の試験日を「計画」で設定すると、新しいスケジュールを作ります。</p><button class="btn" data-act="tab" data-tab="plan">計画を設定する</button>`;
+    } else {
+      const d = plan.days[idx];
+      const done = d.tasks.filter((t,j)=>taskDone(d,j)).length;
+      todayBlock = `
+        <div class="row between"><div class="row"><span class="chip phase-${d.phase}">${PHASE_NAME[d.phase]}</span>
+        <span class="small muted">${d.subj==="all" ? "全科目" : SUBJ_BY[d.subj].name}・目標 ${d.min}分</span></div>
+        <span class="small num">${done}/${d.tasks.length}</span></div>
+        <div class="list" style="margin-top:6px">${d.tasks.map((t,j) => {
+          const x = taskText(t), on = taskDone(d,j);
+          const act = x.a===null ? "" : (x.a.startsWith("<") ? x.a : `<button class="btn" data-act="startTask" data-day="${idx}" data-idx="${j}">${x.a}</button>`);
+          const chk = t.type==="read" ? `<span class="check${on?" on":""}" aria-label="${on?"完了":"未完了"}">${on?"✓":""}</span>`
+            : `<button class="check${on?" on":""}" data-act="toggleTask" data-key="${taskKey(d.ds,j)}" aria-label="完了にする">${on?"✓":""}</button>`;
+          return `<div class="item">${chk}<div class="grow">${esc(x.t)}</div>${act}</div>`;
+        }).join("")}</div>`;
+    }
+  }
+  const allUnits = SUBJ.reduce((a,s)=>a+s.units.length,0);
+  const doneUnits = Object.keys(S.units).filter(k=>S.units[k] && UNIT_BY[k]).length;
+  const qs = qStats("all");
+  const tmin = minutesBy(()=>true);
+  const t = S.timer;
+  const timerBlock = t
+    ? `<div class="row between"><div><div class="label">計測中</div><div><b>${SUBJ_BY[t.subj].name}</b></div></div>
+       <div class="row"><span class="big num" id="timerClock" style="font-size:30px">0:00</span><button class="btn primary" data-act="timerStop">終了して記録</button></div></div>`
+    : `<div class="row"><div class="field" style="flex:1;min-width:160px"><label class="label" for="timerSubj">科目</label>
+       <select id="timerSubj">${SUBJ.map(s=>`<option value="${s.id}">${s.no}. ${s.name}</option>`).join("")}</select></div>
+       <button class="btn primary" data-act="timerStart" style="align-self:flex-end">計測スタート</button></div>
+       <p class="small muted" style="margin:8px 0 0">テキストや過去問の時間を記録します。アプリ内のテストの時間は自動で記録されます。</p>`;
+  return `<div class="stack">
+    <section class="sheet"><h2>今日のメニュー <span class="sub">${fmtDate(today())}</span></h2>${todayBlock}</section>
+    <section class="grid2">
+      <div class="stat"><div class="label">学習時間（合計）</div><div class="v">${fmtH(tmin)}<small>時間</small></div></div>
+      <div class="stat"><div class="label">連続学習</div><div class="v">${streak()}<small>日</small></div></div>
+      <div class="stat"><div class="label">単元の完了</div><div class="v">${doneUnits}<small>/ ${allUnits}</small></div><div class="bar" style="margin-top:6px"><i style="width:${doneUnits/allUnits*100}%"></i></div></div>
+      <div class="stat"><div class="label">正答率</div><div class="v">${pct(qs.rate)}<small>${qs.n}問解答</small></div></div>
+    </section>
+    <section class="sheet"><h2>学習タイマー</h2>${timerBlock}</section>
+    ${qs.weak ? `<section class="sheet"><div class="row between"><div><b>間違えたままの問題が ${qs.weak} 問</b><div class="small muted">正解するまで「苦手」に残ります</div></div>
+      <button class="btn primary" data-act="quickWeak">解き直す</button></div></section>` : ""}
+    <section class="sheet small"><h2>第1次試験の合格基準</h2>
+      <p style="margin:0">7科目の<b>総点数の60%以上</b>で、かつ<b>40点未満の科目がない</b>こと。科目ごとに60点以上なら科目合格となり、翌年度・翌々年度はその科目の受験を免除できます。</p>
+    </section>
+  </div>`;
+}
+
+function viewPlan(){
+  const st = S.settings, plan = buildPlan();
+  const form = `<section class="sheet"><h2>試験日と学習時間</h2>
+    <form id="planForm" class="stack" style="gap:12px">
+      <div class="grid2">
+        <div class="field"><label class="label" for="examDate">第1次試験の日（1日目）</label><input type="date" id="examDate" value="${st.examDate}" required></div>
+        <div class="field"><label class="label" for="startDate">学習開始日</label><input type="date" id="startDate" value="${st.startDate}" required></div>
+        <div class="field"><label class="label" for="weekdayMin">平日の学習時間（分）</label><input type="number" id="weekdayMin" min="0" max="900" step="10" value="${st.weekdayMin}"></div>
+        <div class="field"><label class="label" for="weekendMin">土日の学習時間（分）</label><input type="number" id="weekendMin" min="0" max="900" step="10" value="${st.weekendMin}"></div>
+      </div>
+      <div><div class="label" style="margin-bottom:4px">科目合格（免除）している科目</div>
+      <div class="grid2">${SUBJ.map(s=>`<label class="toggle"><input type="checkbox" id="ex-${s.id}" ${st.exempt.includes(s.id)?"checked":""}>${s.no}. ${s.name}</label>`).join("")}</div></div>
+      <p class="small muted" style="margin:0">試験は例年8月上旬の土日に行われます。正確な日程は中小企業診断協会の発表で確認して入力してください。</p>
+      <div><button class="btn primary" type="submit">この条件で計画を作る</button></div>
+    </form></section>`;
+  if (plan.error) return `<div class="stack">${form}<section class="sheet"><p>${esc(plan.error)}</p></section></div>`;
+
+  const capH = plan.capMin/60, ratio = capH/plan.needH;
+  const verdict = ratio >= 1 ? `<span class="chip phase-input">目安を確保できています</span>`
+    : ratio >= 0.75 ? `<span class="chip phase-practice">目安の${Math.round(ratio*100)}%。少し足りません</span>`
+    : `<span class="chip phase-final">目安の${Math.round(ratio*100)}%。時間を増やすか科目合格を狙う計画に</span>`;
+  const td = ymd(today());
+  const tl = plan.phases.map(p => `<div class="phase-${p.key}" style="flex:${p.n}" title="${p.name} ${p.n}日">${p.n/plan.total > .12 ? p.name : ""}</div>`).join("");
+  const phaseRows = plan.phases.map(p => {
+    const a = addDays(plan.start,p.from), b = addDays(plan.start,p.from+p.n-1);
+    const desc = { input:"科目ごとに単元を読み、単元テストで確認する", practice:"過去問を年度別に解き、弱い科目を繰り返す", final:"本番の時間配分で解き、苦手問題だけを潰す" }[p.key];
+    return `<div class="item"><span class="chip phase-${p.key}">${p.name}</span><div class="grow"><div class="num small">${md(a)} 〜 ${md(b)}（${p.n}日）</div><div class="small muted">${desc}</div></div></div>`;
+  }).join("");
+  const blockRows = plan.blocks.map(b => {
+    const s = SUBJ_BY[b.subj], now = td >= ymd(b.from) && td <= ymd(b.to);
+    return `<tr${now?' style="font-weight:700"':""}><td>${s.no}. ${s.name}</td><td class="num">${s.hours}h</td><td class="num">${md(b.from)}〜${md(b.to)}</td><td class="num">${b.days}日</td></tr>`;
+  }).join("");
+
+  // 週ごと
+  const weeks = [];
+  plan.days.forEach(d => {
+    const mon = addDays(d.date, -((d.date.getDay()+6)%7)), k = ymd(mon);
+    let w = weeks[weeks.length-1];
+    if (!w || w.k !== k){ w = { k, from:d.date, to:d.date, min:0, phases:new Set(), subs:[] }; weeks.push(w); }
+    w.to = d.date; w.min += d.min; w.phases.add(d.phase);
+    const name = d.subj==="all" ? "模擬" : SUBJ_BY[d.subj].short;
+    if (!w.subs.includes(name)) w.subs.push(name);
+  });
+  const weekRows = weeks.map((w,n) => {
+    const now = td >= ymd(w.from) && td <= ymd(w.to);
+    const ph = [...w.phases].map(p=>`<span class="chip phase-${p}">${PHASE_NAME[p]}</span>`).join(" ");
+    return `<div class="week${now?" now":""}"${now?' id="thisWeek"':""}><div class="wd">${md(w.from)}–${md(w.to)}</div><div class="wc">${ph} ${esc(w.subs.join("・"))}</div><div class="wh">${fmtH(w.min)}h</div></div>`;
+  }).join("");
+
+  return `<div class="stack">
+    <section class="sheet"><h2>計画のあらまし <span class="sub">${fmtDate(plan.start)} 〜 ${fmtDate(plan.exam)}</span></h2>
+      <div class="grid2" style="margin-bottom:12px">
+        <div class="stat"><div class="label">試験までの日数</div><div class="v">${plan.total}<small>日</small></div></div>
+        <div class="stat"><div class="label">確保できる時間</div><div class="v">${Math.round(capH)}<small>/ 目安 ${plan.needH}時間</small></div><div class="bar${ratio<1?" warn":""}" style="margin-top:6px"><i style="width:${Math.min(100,ratio*100)}%"></i></div></div>
+      </div>
+      <div style="margin-bottom:12px">${verdict}</div>
+      <div class="timeline" aria-hidden="true">${tl}</div>
+      <div class="list" style="margin-top:8px">${phaseRows}</div>
+    </section>
+    <section class="sheet"><h2>インプット期の科目の順番</h2>
+      <p class="small muted" style="margin-top:0">2次試験にもつながる財務・会計と企業経営理論から始め、白書の内容が中心の中小企業経営・政策は最後に回します。日数は科目ごとの学習時間の目安に比例させています。</p>
+      <div class="tbl"><table><tr><th>科目</th><th>目安</th><th>期間</th><th>日数</th></tr>${blockRows || `<tr><td colspan="4">期間が短いため、演習と直前対策から始めます</td></tr>`}</table></div>
+    </section>
+    <section class="sheet"><h2>週ごとの予定 <span class="sub">${weeks.length}週</span></h2><div>${weekRows}</div></section>
+    ${form}
+    <section class="sheet small"><h2>第2次試験（筆記）のこと</h2>
+      <p style="margin-top:0">1次試験に合格すると、その年度と翌年度に2次試験を受けられます。筆記は例年10月下旬ごろ、事例ごとに80分・100点です。</p>
+      <div class="tbl"><table><tr><th>事例</th><th>テーマ</th><th>つながる1次科目</th></tr>
+      <tr><td>事例Ⅰ</td><td>組織・人事</td><td>企業経営理論（組織論・人的資源）</td></tr>
+      <tr><td>事例Ⅱ</td><td>マーケティング・流通</td><td>企業経営理論（マーケ）、運営管理（店舗）</td></tr>
+      <tr><td>事例Ⅲ</td><td>生産・技術</td><td>運営管理（生産管理）</td></tr>
+      <tr><td>事例Ⅳ</td><td>財務・会計</td><td>財務・会計（経営分析・CVP・NPV）</td></tr></table></div>
+      <p style="margin-bottom:0">1次の勉強中から、この4分野は「説明できる」レベルまで深めておくと2次に入りやすくなります。</p>
+    </section>
+  </div>`;
+}
+
+function viewLearn(){
+  if (UI.unit){
+    const u = UNIT_BY[UI.unit], s = SUBJ_BY[u.subj], i = s.units.indexOf(u);
+    const nq = QS.filter(q => q.u===u.id).length, done = !!S.units[u.id];
+    const next = s.units[i+1];
+    return `<div class="stack">
+      <div><button class="btn ghost" data-act="back">← ${esc(s.name)}</button></div>
+      <article class="sheet">
+        <div class="row" style="margin-bottom:6px">${subjCode(s.id)}<span class="small muted">${esc(s.name)}・単元 ${i+1}/${s.units.length}</span></div>
+        <h2 style="font-size:21px">${esc(u.title)}</h2>
+        <div class="note">${u.body}</div>
+      </article>
+      <div class="grid2">
+        <button class="btn wide${done?"":" primary"}" data-act="toggleUnit" data-unit="${u.id}">${done ? "✓ 完了済み（取り消す）" : "この単元を完了にする"}</button>
+        <button class="btn wide" data-act="unitQuiz" data-unit="${u.id}">この単元の確認テスト（${nq}問）</button>
+      </div>
+      ${next ? `<button class="btn ghost" data-act="openUnit" data-unit="${next.id}">次の単元：${esc(next.title)} →</button>` : ""}
+    </div>`;
+  }
+  if (UI.subj){
+    const s = SUBJ_BY[UI.subj], st = qStats(s.id);
+    return `<div class="stack">
+      <div><button class="btn ghost" data-act="back">← 科目一覧</button></div>
+      <section class="sheet">
+        <div class="row" style="margin-bottom:4px">${subjCode(s.id)}<span class="small muted">${s.day}日目・${s.minutes}分・学習時間の目安 ${s.hours}時間</span></div>
+        <h2 style="font-size:21px">${esc(s.name)}</h2>
+        <div class="row small muted">単元 ${unitsDone(s.id)}/${s.units.length} 完了・正答率 ${pct(st.rate)}</div>
+        <div class="list" style="margin-top:8px">${s.units.map((u,i) => { const on = !!S.units[u.id]; return `
+          <button class="item" data-act="openUnit" data-unit="${u.id}"><span class="check${on?" on":""}" aria-hidden="true">${on?"✓":""}</span>
+          <div class="grow"><div class="t">${i+1}. ${esc(u.title)}</div><div class="small muted">確認テスト ${QS.filter(q=>q.u===u.id).length}問</div></div><span class="muted">›</span></button>`; }).join("")}</div>
+      </section>
+      <button class="btn wide primary" data-act="subjQuiz" data-subj="${s.id}">${esc(s.short)}の科目テスト（ランダム10問）</button>
+    </div>`;
+  }
+  return `<div class="stack">
+    <section class="sheet"><h2>科目 <span class="sub">番号は試験当日に解く順番です</span></h2>
+    <div class="list">${SUBJ.map(s => { const d = unitsDone(s.id), st = qStats(s.id), ex = S.settings.exempt.includes(s.id); return `
+      <button class="item" data-act="openSubj" data-subj="${s.id}">${subjCode(s.id)}
+      <div class="grow"><div class="t">${esc(s.name)}${ex?' <span class="chip">免除</span>':""}</div>
+      <div class="row small muted" style="gap:6px 12px"><span>単元 ${d}/${s.units.length}</span><span>正答率 ${pct(st.rate)}</span><span>${s.day}日目・${s.minutes}分</span></div>
+      <div class="bar" style="margin-top:4px"><i style="width:${d/s.units.length*100}%"></i></div></div><span class="muted">›</span></button>`; }).join("")}</div></section>
+    <p class="small muted">要点ノートは試験範囲の骨組みです。市販のテキストや過去問と組み合わせて使ってください。法改正・施策・白書の数値は年度で変わるため、最新の情報を確認してください。</p>
+  </div>`;
+}
+
+function viewTest(){
+  if (UI.quiz) return viewQuiz();
+  if (UI.result) return viewResult();
+  const su = UI.setup;
+  const pool = quizPool(su.subj, su.mode);
+  const counts = [5,10,20,40];
+  const recent = S.sessions.slice(-6).reverse();
+  return `<div class="stack">
+    <section class="sheet"><h2>確認テスト</h2>
+      <div class="label">科目</div>
+      <div class="row" style="margin:6px 0 14px;gap:6px">
+        <button class="chip${su.subj==="all"?" on":""}" data-act="setup" data-k="subj" data-v="all">全科目ミックス</button>
+        ${SUBJ.map(s=>`<button class="chip${su.subj===s.id?" on":""}" data-act="setup" data-k="subj" data-v="${s.id}">${s.no}. ${s.short}</button>`).join("")}
+      </div>
+      <div class="label">出題のしかた</div>
+      <div class="row" style="margin:6px 0 14px;gap:6px">
+        <button class="chip${su.mode==="random"?" on":""}" data-act="setup" data-k="mode" data-v="random">ランダム</button>
+        <button class="chip${su.mode==="new"?" on":""}" data-act="setup" data-k="mode" data-v="new">まだ解いていない問題から</button>
+        <button class="chip${su.mode==="weak"?" on":""}" data-act="setup" data-k="mode" data-v="weak">間違えた問題だけ</button>
+      </div>
+      <div class="label">問題数</div>
+      <div class="row" style="margin:6px 0 16px;gap:6px">${counts.map(c=>`<button class="chip${su.count===c?" on":""}" data-act="setup" data-k="count" data-v="${c}">${c}問</button>`).join("")}</div>
+      <button class="btn primary wide" data-act="startQuiz" ${pool.length?"":"disabled"}>${pool.length ? `${Math.min(su.count,pool.length)}問ではじめる` : (su.mode==="weak" ? "間違えた問題はありません" : "出題できる問題がありません")}</button>
+    </section>
+    <section class="sheet"><h2>科目別の成績</h2>
+      <div class="tbl"><table><tr><th>科目</th><th>解いた問題</th><th>正答率</th><th>苦手</th></tr>
+      ${SUBJ.map(s => { const st = qStats(s.id); return `<tr><td>${s.no}. ${s.short}</td><td class="num">${st.seen}/${st.total}</td><td class="num">${pct(st.rate)}</td><td class="num">${st.weak}</td></tr>`; }).join("")}
+      </table></div>
+    </section>
+    ${recent.length ? `<section class="sheet"><h2>最近のテスト</h2><div class="list">${recent.map(r=>`<div class="item"><div class="grow"><div class="t">${esc(r.title)}</div><div class="small muted num">${r.date}</div></div><b class="num">${r.correct}/${r.total}</b></div>`).join("")}</div></section>` : ""}
+  </div>`;
+}
+function quizPool(subj, mode, unit){
+  let qs = QS.filter(q => unit ? q.u===unit : (subj==="all" || q.s===subj));
+  if (subj==="all" && !unit) qs = qs.filter(q => !S.settings.exempt.includes(q.s));
+  if (mode==="weak") qs = qs.filter(q => S.answers[q.id] && S.answers[q.id].last==="ng");
+  return qs;
+}
+function startQuiz(opts){
+  let pool = quizPool(opts.subj||"all", opts.mode||"random", opts.unit);
+  if (!pool.length){ toast(opts.mode==="weak" ? "間違えた問題はありません" : "出題できる問題がありません"); return; }
+  if (opts.mode==="new"){
+    const fresh = shuffle(pool.filter(q => !S.answers[q.id])), old = shuffle(pool.filter(q => S.answers[q.id]));
+    pool = fresh.concat(old);
+  } else pool = shuffle(pool);
+  const list = pool.slice(0, opts.count || pool.length).map(q => ({ q, order: shuffle([0,1,2,3]), pick:null }));
+  UI.quiz = { list, i:0, title: opts.title, taskKey: opts.taskKey || null, shownAt: Date.now() };
+  UI.result = null; UI.tab = "test"; render(); window.scrollTo(0,0);
+}
+function viewQuiz(){
+  const z = UI.quiz, it = z.list[z.i], q = it.q, s = SUBJ_BY[q.s], answered = it.pick !== null;
+  const opts = it.order.map((ci, k) => {
+    let cls = "opt";
+    if (answered){ if (ci===0) cls += " right"; if (it.pick===k) cls += (ci===0 ? " picked" : " wrong"); }
+    return `<button class="${cls}" data-act="answer" data-k="${k}" ${answered?"disabled":""}><span class="bubble">${KANA[k]}</span><span>${esc(q.c[ci])}</span></button>`;
+  }).join("");
+  const ok = answered && it.order[it.pick]===0;
+  const rightKana = KANA[it.order.indexOf(0)];
+  return `<div class="stack">
+    <div class="row between"><span class="small muted">${esc(z.title)}</span><button class="btn ghost" data-act="quitQuiz">中断する</button></div>
+    <div class="bar"><i style="width:${(z.i + (answered?1:0))/z.list.length*100}%"></i></div>
+    <section class="sheet">
+      <div class="qhead"><span class="qno">第${z.i+1}問 <span class="small muted num">/ ${z.list.length}</span></span><span class="row small muted">${subjCode(s.id)}${esc(UNIT_BY[q.u].title)}</span></div>
+      <div class="qtext">${esc(q.q)}</div>
+      <div class="opts">${opts}</div>
+      ${answered ? `<div class="verdict ${ok?"ok":"ng"}"><b>${ok?"正解":"不正解（正解は "+rightKana+"）"}</b><div class="small" style="margin-top:4px">${esc(q.e)}</div></div>
+        <div style="margin-top:14px"><button class="btn primary wide" data-act="nextQ" id="nextBtn">${z.i+1<z.list.length ? "次の問題へ" : "結果を見る"}</button></div>` : ""}
+    </section>
+  </div>`;
+}
+function viewResult(){
+  const r = UI.result, rate = r.correct/r.total;
+  const wrong = r.items.filter(x => !x.ok);
+  const msg = rate >= .6 ? "合格ラインの60%を超えました" : rate >= .4 ? "足切りの40%は超えています。あと少しで60%" : "40%未満です。要点ノートを読み直してから再挑戦しましょう";
+  return `<div class="stack">
+    <section class="sheet"><h2>${esc(r.title)}</h2>
+      <div class="row" style="align-items:baseline;gap:8px"><span class="big">${Math.round(rate*100)}</span><span>点 換算</span><span class="muted num">（${r.correct}/${r.total}問）</span></div>
+      <div class="gauge"><i style="width:${rate*100}%"></i><span class="ln" style="left:40%"><span>40 足切り</span></span><span class="ln" style="left:60%"><span>60 合格</span></span></div>
+      <p class="small" style="margin-bottom:0">${msg}</p>
+    </section>
+    <div class="grid2">
+      ${wrong.length ? `<button class="btn primary wide" data-act="retryWrong">間違えた${wrong.length}問を解き直す</button>` : ""}
+      <button class="btn wide" data-act="closeResult">テスト選択へ戻る</button>
+    </div>
+    <section class="sheet"><h2>解答の振り返り</h2><div class="list">${r.items.map((x,n) => `
+      <details class="item" style="display:block"><summary class="row" style="flex-wrap:nowrap"><span class="check${x.ok?" on":""}" style="${x.ok?"":"border-color:var(--bad);color:var(--bad)"}">${x.ok?"✓":"✕"}</span><span class="grow small">${n+1}. ${esc(x.q.q)}</span></summary>
+      <div class="small" style="padding:8px 0 0 34px"><div><b>正解：</b>${esc(x.q.c[0])}</div>${x.ok?"":`<div class="muted">あなたの解答：${esc(x.q.c[x.pickC])}</div>`}<div style="margin-top:4px">${esc(x.q.e)}</div>
+      <button class="btn ghost small" data-act="openUnit" data-unit="${x.q.u}">「${esc(UNIT_BY[x.q.u].title)}」を読む</button></div></details>`).join("")}</div></section>
+  </div>`;
+}
+
+function viewLog(){
+  const dm = dayMinutes(), t0 = today();
+  const end = t0, startH = addDays(end, -(7*15 + ((end.getDay()+6)%7)));
+  let cells = "";
+  for (let d = new Date(startH); d <= end; d = addDays(d,1)){
+    const m = dm[ymd(d)] || 0;
+    const l = m===0 ? "" : m<30 ? "l1" : m<90 ? "l2" : m<180 ? "l3" : "l4";
+    cells += `<i class="${l}${ymd(d)===ymd(t0)?" today":""}" title="${md(d)} ${Math.round(m)}分"></i>`;
+  }
+  const mon = addDays(t0, -((t0.getDay()+6)%7));
+  const weekMin = minutesBy(l => l.date >= ymd(mon));
+  const qs = qStats("all");
+  const logs = S.logs.slice().sort((a,b)=> a.date<b.date ? 1 : a.date>b.date ? -1 : 0).slice(0,15);
+  const srcName = { manual:"手入力", timer:"タイマー", quiz:"テスト" };
+  return `<div class="stack">
+    <section class="grid2">
+      <div class="stat"><div class="label">学習時間（合計）</div><div class="v">${fmtH(minutesBy(()=>true))}<small>時間</small></div></div>
+      <div class="stat"><div class="label">今週</div><div class="v">${fmtH(weekMin)}<small>時間</small></div></div>
+      <div class="stat"><div class="label">連続学習</div><div class="v">${streak()}<small>日</small></div></div>
+      <div class="stat"><div class="label">解答数・正答率</div><div class="v">${qs.n}<small>問・${pct(qs.rate)}</small></div></div>
+    </section>
+    <section class="sheet"><h2>学習カレンダー <span class="sub">直近16週・色が濃いほど長く学習</span></h2><div class="heat">${cells}</div></section>
+    <section class="sheet"><h2>科目別</h2>
+      <div class="tbl"><table><tr><th>科目</th><th>学習時間</th><th>単元</th><th>正答率</th></tr>
+      ${SUBJ.map(s => `<tr><td>${s.no}. ${s.short}</td><td class="num">${fmtH(minutesBy(l=>l.subj===s.id))}h / ${s.hours}h</td><td class="num">${unitsDone(s.id)}/${s.units.length}</td><td class="num">${pct(qStats(s.id).rate)}</td></tr>`).join("")}
+      </table></div>
+    </section>
+    <section class="sheet"><h2>学習時間を記録する</h2>
+      <form id="logForm" class="grid2">
+        <div class="field"><label class="label" for="logDate">日付</label><input type="date" id="logDate" value="${ymd(t0)}" required></div>
+        <div class="field"><label class="label" for="logSubj">科目</label><select id="logSubj">${SUBJ.map(s=>`<option value="${s.id}">${s.no}. ${s.name}</option>`).join("")}</select></div>
+        <div class="field"><label class="label" for="logMin">時間（分）</label><input type="number" id="logMin" min="1" max="900" step="1" value="60" required></div>
+        <div class="field" style="justify-content:flex-end"><button class="btn primary" type="submit">記録する</button></div>
+      </form>
+      ${logs.length ? `<div class="list" style="margin-top:10px">${logs.map(l=>`<div class="item small"><span class="num muted">${l.date.slice(5)}</span><div class="grow">${esc(SUBJ_BY[l.subj].name)} <span class="muted">${srcName[l.src]||""}</span></div><span class="num">${Math.round(l.min)}分</span><button class="btn ghost" data-act="delLog" data-id="${l.id}" aria-label="削除">✕</button></div>`).join("")}</div>` : `<p class="small muted">まだ記録がありません。テストを解くか、タイマーを使うとここに残ります。</p>`}
+    </section>
+    <section class="sheet"><h2>データの引き継ぎ</h2>
+      <p class="small muted" style="margin-top:0">記録はこの端末のブラウザに保存されています。機種変更のときは、下のデータをコピーして新しい端末に貼り付けてください。</p>
+      ${UI.backupOpen ? `<textarea id="backupText" spellcheck="false">${esc(JSON.stringify(S))}</textarea>
+        <div class="row" style="margin-top:8px"><button class="btn" data-act="copyBackup">コピー</button><button class="btn" data-act="importBackup">貼り付けた内容で上書き</button><button class="btn ghost" data-act="backup">閉じる</button></div>`
+        : `<button class="btn" data-act="backup">バックアップを表示</button>`}
+      <div style="margin-top:16px;border-top:1px solid var(--rule);padding-top:12px">
+      ${UI.confirm==="reset" ? `<div class="row"><span class="small">学習記録・テスト結果・設定をすべて消します。</span><button class="btn danger" data-act="doReset">消去する</button><button class="btn ghost" data-act="cancel">やめる</button></div>`
+        : `<button class="btn danger" data-act="askReset">すべての記録を消去…</button>`}</div>
+    </section>
+  </div>`;
+}
+
+/* ---------- 操作 ---------- */
+function finishQuiz(){
+  const z = UI.quiz;
+  const items = z.list.map(x => ({ q:x.q, ok: x.pick!==null && x.order[x.pick]===0, pickC: x.pick===null ? null : x.order[x.pick], done: x.pick!==null })).filter(x => x.done);
+  const correct = items.filter(x=>x.ok).length;
+  if (items.length){
+    S.sessions.push({ date: ymd(today()), title: z.title, total: items.length, correct });
+    if (S.sessions.length > 200) S.sessions = S.sessions.slice(-200);
+    if (z.taskKey) S.checks[z.taskKey] = true;
+    save();
+  }
+  UI.quiz = null;
+  UI.result = items.length ? { title:z.title, total:items.length, correct, items } : null;
+  render(); window.scrollTo(0,0);
+}
+const ACT = {
+  tab: d => { UI.tab = d.tab; UI.confirm = null; UI.result = null; render(); window.scrollTo(0,0); },
+  openSubj: d => { UI.subj = d.subj; UI.unit = null; render(); window.scrollTo(0,0); },
+  openUnit: d => { UI.tab = "learn"; UI.unit = d.unit; UI.subj = UNIT_BY[d.unit].subj; UI.result = null; render(); window.scrollTo(0,0); },
+  back: () => { if (UI.unit) UI.unit = null; else UI.subj = null; render(); window.scrollTo(0,0); },
+  toggleUnit: d => { if (S.units[d.unit]) delete S.units[d.unit]; else { S.units[d.unit] = ymd(today()); toast("単元を完了にしました"); } save(); render(); },
+  unitQuiz: d => startQuiz({ unit:d.unit, title:"単元テスト：" + UNIT_BY[d.unit].title }),
+  subjQuiz: d => startQuiz({ subj:d.subj, count:10, title:SUBJ_BY[d.subj].name + " 10問" }),
+  setup: d => { UI.setup[d.k] = d.k==="count" ? Number(d.v) : d.v; render(); },
+  startQuiz: () => { const su = UI.setup; const name = su.subj==="all" ? "全科目ミックス" : SUBJ_BY[su.subj].name; startQuiz({ subj:su.subj, mode:su.mode, count:su.count, title: name + ({random:"",new:"（未出題優先）",weak:"（解き直し）"})[su.mode] }); },
+  quickWeak: () => startQuiz({ subj:"all", mode:"weak", count:20, title:"間違えた問題の解き直し" }),
+  answer: d => {
+    const z = UI.quiz, it = z.list[z.i]; if (it.pick !== null) return;
+    it.pick = Number(d.k);
+    const ok = it.order[it.pick] === 0;
+    const a = S.answers[it.q.id] || { n:0, ok:0 };
+    a.n++; if (ok) a.ok++; a.last = ok ? "ok" : "ng"; a.at = ymd(today());
+    S.answers[it.q.id] = a;
+    const sec = Math.min(300, (Date.now() - z.shownAt)/1000);
+    addLog(ymd(today()), it.q.s, sec/60, "quiz");
+    save(); render();
+    const nb = $("#nextBtn"); if (nb) nb.scrollIntoView({ block:"nearest", behavior:"smooth" });
+  },
+  nextQ: () => { const z = UI.quiz; if (z.i+1 < z.list.length){ z.i++; z.shownAt = Date.now(); render(); window.scrollTo(0,0); } else finishQuiz(); },
+  quitQuiz: () => finishQuiz(),
+  retryWrong: () => { const r = UI.result; const qs = r.items.filter(x=>!x.ok).map(x=>x.q); UI.quiz = { list: shuffle(qs).map(q=>({ q, order:shuffle([0,1,2,3]), pick:null })), i:0, title:"解き直し", taskKey:null, shownAt:Date.now() }; UI.result = null; render(); window.scrollTo(0,0); },
+  closeResult: () => { UI.result = null; render(); },
+  toggleTask: d => { if (S.checks[d.key]) delete S.checks[d.key]; else S.checks[d.key] = true; save(); render(); },
+  startTask: d => {
+    const plan = buildPlan(), day = plan.days[Number(d.day)], t = day.tasks[Number(d.idx)], key = taskKey(day.ds, Number(d.idx));
+    if (t.type==="quiz"){
+      if (t.scope==="unit") startQuiz({ unit:t.unit, title:"単元テスト：" + UNIT_BY[t.unit].title, taskKey:key });
+      else if (t.scope==="all") startQuiz({ subj:"all", count:t.count, title:t.label || "全科目テスト", taskKey:key });
+      else startQuiz({ subj:t.subj, count:t.count, title:(t.label||"確認テスト") + "：" + SUBJ_BY[t.subj].name, taskKey:key });
+    } else if (t.type==="weak"){
+      const pool = quizPool(t.subj, "weak");
+      if (!pool.length){ S.checks[key] = true; save(); render(); toast("間違えたままの問題はありません"); return; }
+      startQuiz({ subj:t.subj, mode:"weak", count:20, title:"解き直し", taskKey:key });
+    }
+  },
+  timerStart: () => { S.timer = { subj: $("#timerSubj").value, start: Date.now() }; save(); render(); tick(); },
+  timerStop: () => {
+    const t = S.timer; if (!t) return;
+    const min = (Date.now() - t.start)/60000;
+    S.timer = null;
+    if (min >= 1){ addLog(ymd(today()), t.subj, Math.min(min, 720), "timer"); toast(Math.round(min)+"分を記録しました"); } else toast("1分未満なので記録しませんでした");
+    save(); render();
+  },
+  delLog: d => { S.logs = S.logs.filter(l => l.id !== d.id); save(); render(); },
+  backup: () => { UI.backupOpen = !UI.backupOpen; render(); },
+  copyBackup: () => {
+    const ta = $("#backupText");
+    const fallback = () => { ta.focus(); ta.select(); toast("選択しました。コピーしてください"); };
+    try { navigator.clipboard.writeText(ta.value).then(()=>toast("コピーしました"), fallback); } catch(e){ fallback(); }
+  },
+  importBackup: () => {
+    try {
+      const d = JSON.parse($("#backupText").value);
+      if (!d || typeof d !== "object" || !d.settings) throw 0;
+      const base = defaults();
+      S = Object.assign(base, d, { settings: Object.assign(base.settings, d.settings) });
+      save(); UI.backupOpen = false; render(); toast("データを読み込みました");
+    } catch(e){ toast("読み込めませんでした。コピーした内容をそのまま貼り付けてください"); }
+  },
+  askReset: () => { UI.confirm = "reset"; render(); },
+  cancel: () => { UI.confirm = null; render(); },
+  doReset: () => { S = defaults(); save(); UI.confirm = null; UI.quiz = null; UI.result = null; render(); toast("すべて消去しました"); }
+};
+document.addEventListener("click", e => {
+  const tab = e.target.closest(".tab");
+  if (tab){ ACT.tab({ tab: tab.dataset.tab }); try { history.replaceState(null, "", "#"+tab.dataset.tab); } catch(_){} return; }
+  const t = e.target.closest("[data-act]");
+  if (!t || t.disabled) return;
+  const f = ACT[t.dataset.act]; if (f){ e.preventDefault(); f(t.dataset, t); }
+});
+document.addEventListener("submit", e => {
+  e.preventDefault();
+  if (e.target.id === "planForm"){
+    const g = id => document.getElementById(id);
+    const examDate = g("examDate").value, startDate = g("startDate").value;
+    if (!examDate || !startDate){ toast("日付を入力してください"); return; }
+    S.settings = { examDate, startDate,
+      weekdayMin: Math.max(0, Number(g("weekdayMin").value)||0), weekendMin: Math.max(0, Number(g("weekendMin").value)||0),
+      exempt: SUBJ.filter(s => g("ex-"+s.id).checked).map(s => s.id) };
+    S.checks = {};
+    save(); render(); window.scrollTo(0,0); toast("計画を作り直しました");
+  }
+  if (e.target.id === "logForm"){
+    const date = $("#logDate").value, subj = $("#logSubj").value, min = Number($("#logMin").value);
+    if (!date || !(min > 0)){ toast("日付と時間を入力してください"); return; }
+    addLog(date, subj, min, "manual"); save(); render(); toast(min+"分を記録しました");
+  }
+});
+function tick(){
+  clearInterval(tick.h);
+  if (!S.timer) return;
+  const draw = () => { const el = $("#timerClock"); if (!el || !S.timer) return; const s = Math.floor((Date.now()-S.timer.start)/1000); el.textContent = Math.floor(s/3600) ? Math.floor(s/3600)+":"+pad(Math.floor(s/60)%60)+":"+pad(s%60) : Math.floor(s/60)+":"+pad(s%60); };
+  draw(); tick.h = setInterval(draw, 1000);
+}
+document.addEventListener("keydown", e => {
+  if (!UI.quiz || e.target.closest("input,select,textarea")) return;
+  const it = UI.quiz.list[UI.quiz.i];
+  const k = "1234".indexOf(e.key);
+  if (k >= 0 && it.pick === null) ACT.answer({ k });
+  else if (e.key === "Enter" && it.pick !== null) ACT.nextQ();
+});
+
+const h = (location.hash||"").slice(1);
+if (["home","plan","learn","test","log"].includes(h)) UI.tab = h;
+render(); tick();
+})();
+</script>
+<script data-pwa>if("serviceWorker" in navigator && location.protocol==="https:"){navigator.serviceWorker.register("sw.js").catch(function(){});}</script>
+</body>
+</html>
