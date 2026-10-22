@@ -1,9 +1,9 @@
 // おかまるパワプロ：オフラインでも開けるようにするService Worker
 // アプリを更新したら VERSION を上げる（古いキャッシュが消える）
-const VERSION = "v1";
+const VERSION = "v2";
 const SHELL = `shell-${VERSION}`;
 const FONTS = "fonts";
-const FILES = ["./", "index.html", "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png"];
+const FILES = ["./", "index.html", "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png", "boxing/"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(SHELL).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
@@ -36,12 +36,12 @@ self.addEventListener("fetch", e => {
 
   if (url.origin !== location.origin) return;
 
-  // ページ本体：ネットにつながれば最新、だめならキャッシュ
+  // ページ本体：ネットにつながれば最新、だめならキャッシュ（ページごとに別々に保存）
   if (req.mode === "navigate") {
     e.respondWith(
       fetch(req)
-        .then(res => { const copy = res.clone(); caches.open(SHELL).then(c => c.put("index.html", copy)); return res; })
-        .catch(() => caches.match("index.html"))
+        .then(res => { const copy = res.clone(); caches.open(SHELL).then(c => c.put(req, copy)); return res; })
+        .catch(() => caches.match(req, { ignoreSearch: true }).then(hit => hit || caches.match("index.html")))
     );
     return;
   }

@@ -1,0 +1,785 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>おかまるボクササイズ</title>
+<meta name="theme-color" content="#14101c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ボクササイズ">
+<meta name="format-detection" content="telephone=no">
+<link rel="icon" type="image/png" sizes="192x192" href="../icons/icon-192.png">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Reggae+One&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap">
+<style>
+/* Layout: リングの夜。上から「今日のメニュー → コラム → タイマー → コンビ一覧 → 記録 → 履歴」を1列で積む（単一テーマ） */
+:root{
+  --paper:#14101c; --card:#1e1829; --card2:#2a2138; --ink:#f3eef7; --sub:#a99fb7; --line:#3a2f4a;
+  --gold:#f2c14e; --gold-deep:#b98a1e; --on-gold:#1a1206;
+  --box:#7fb0ff; --kick:#ff7d4a; --kick-bg:#3a1f1a; --def:#5ccb9f; --def-bg:#1c3229;
+  --sans:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Hiragino Sans","Meiryo",sans-serif;
+  --disp:"Reggae One","Zen Kaku Gothic New","Hiragino Sans",sans-serif;
+  --num:"Anton","Arial Narrow",system-ui,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{background:var(--paper);-webkit-text-size-adjust:100%;scroll-padding-top:calc(env(safe-area-inset-top,0px) + 56px)}
+body{margin:0;background:radial-gradient(120% 50% at 50% -10%,rgba(176,107,255,.16),transparent 62%) no-repeat,var(--paper);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.65;font-weight:500;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);-webkit-tap-highlight-color:transparent}
+main{max-width:560px;margin:0 auto;padding:12px 16px 80px}
+button{font:inherit;color:inherit;cursor:pointer}
+input,textarea{font:inherit;color:var(--ink)}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+[hidden]{display:none!important}
+
+.ropes{display:flex;flex-direction:column;gap:4px;margin:0 -16px 12px}
+.ropes i{display:block;height:3px}
+.ropes i:nth-child(1){background:#d8443c}.ropes i:nth-child(2){background:#e6e9ee;opacity:.7}.ropes i:nth-child(3){background:#3f6fd8}
+.head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
+.date-sub{margin:0;font-family:var(--num);letter-spacing:.14em;font-size:12px;color:var(--sub)}
+.date-big{margin:0;font-family:var(--disp);font-weight:400;font-size:clamp(24px,7.5vw,32px);line-height:1.2}
+.streak{text-align:center;flex:none;padding:6px 12px;border:1px solid var(--line);border-radius:14px;background:var(--card)}
+.streak b{display:block;font-family:var(--num);font-weight:400;font-size:34px;line-height:1;font-variant-numeric:tabular-nums}
+.streak span{font-size:11px;color:var(--sub)}
+.streak.hot b{color:var(--kick);text-shadow:0 0 16px rgba(255,125,74,.45)}
+.strip{display:grid;grid-template-columns:repeat(14,1fr);gap:3px;margin:12px 0 2px}
+.strip i{height:16px;border-radius:4px;background:var(--card);border:1px solid var(--line)}
+.strip i.on{background:var(--gold);border-color:var(--gold)}
+.strip i.now{outline:1.5px solid var(--ink);outline-offset:1px}
+.strip-cap{display:flex;justify-content:space-between;font-size:11px;color:var(--sub)}
+
+.jump{position:sticky;top:0;z-index:10;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:14px -16px 0;padding:8px 16px;background:color-mix(in srgb,var(--paper) 88%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.jump::-webkit-scrollbar{display:none}
+.jump a{flex:none;font-size:12px;color:var(--sub);text-decoration:none;padding:4px 12px;border-radius:14px;border:1px solid var(--line)}
+
+h2{font-family:var(--disp);font-weight:400;font-size:17px;display:flex;align-items:center;gap:12px;margin:34px 0 12px}
+h2::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px}
+.note{font-size:11.5px;color:var(--sub);margin:10px 0 0}
+
+/* 今日のメニュー */
+.mn-theme{font-family:var(--disp);font-size:19px;line-height:1.4;margin:0}
+.mn-focus{margin:4px 0 12px;color:var(--sub);font-size:13px}
+.mn-sec{margin:10px 0}
+.mn-sec>b{font-size:11.5px;color:var(--gold);letter-spacing:.06em}
+.mn-sec>p{margin:2px 0 0;font-size:13px}
+.rounds{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.rd{display:grid;grid-template-columns:30px 1fr;gap:4px 10px;padding:10px;border-radius:12px;background:var(--paper);border:1px solid var(--line)}
+.rd.on{border-color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold)}
+.rd-no{grid-row:span 3;font-family:var(--num);font-size:18px;color:var(--gold);text-align:center;line-height:1.3}
+.rd-no small{display:block;font-family:var(--sans);font-size:10px;color:var(--sub)}
+.rd-name{font-weight:700;font-size:13.5px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.rd .yt{justify-self:start}
+.done-btn{width:100%;margin-top:14px;padding:15px;border:0;border-radius:12px;background:linear-gradient(180deg,var(--gold),var(--gold-deep));color:var(--on-gold);font-family:var(--disp);font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 6px 22px rgba(242,193,78,.2)}
+.done-btn[aria-pressed="true"]{background:transparent;color:var(--def);border:1.5px solid var(--def);box-shadow:none}
+.row-btns{display:flex;gap:8px;margin-top:8px}
+.ghost{flex:1;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--paper);font-size:12.5px;font-weight:700}
+
+/* バッジ・ステップ */
+.kind{flex:none;font-size:10.5px;padding:0 8px;border-radius:10px;border:1px solid var(--box);color:var(--box);font-weight:700;line-height:1.7}
+.kind.kick{border-color:var(--kick);color:var(--kick)}
+.kind.mine{border-color:var(--def);color:var(--def)}
+.lv{font-size:11px;color:var(--gold);letter-spacing:1px}
+.steps{display:flex;flex-wrap:wrap;gap:4px 2px;align-items:center;margin:6px 0 2px;padding:0;list-style:none}
+.st{display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:2px 9px 2px 3px;border-radius:14px;background:var(--card);border:1px solid var(--line);line-height:1.5}
+.st b{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;border-radius:10px;padding:0 5px;background:var(--card2);color:var(--box);border:1px solid var(--box);font-family:var(--num);font-weight:400;font-size:11.5px}
+.st.k{background:var(--kick-bg);border-color:var(--kick)}
+.st.k b{color:var(--kick);border-color:var(--kick);font-family:var(--sans);font-weight:700;font-size:10.5px}
+.st.d{background:var(--def-bg);border-color:var(--def);border-style:dashed}
+.st.d b{color:var(--def);border-color:var(--def);font-family:var(--sans);font-weight:700;font-size:10.5px}
+.arr{color:var(--sub);font-size:11px;padding:0 1px}
+.nota{font-family:var(--num);letter-spacing:.06em;font-size:13px;color:var(--sub)}
+.yt{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:10px;border:1px solid var(--line);background:var(--paper);text-decoration:none;font-size:12px;font-weight:700;color:var(--ink)}
+.yt::before{content:"▶";color:#ff4b4b;font-size:11px}
+
+/* コラム */
+.col-tag{display:inline-block;font-size:11px;color:var(--gold);border:1px solid var(--gold-deep);border-radius:12px;padding:0 10px;margin-bottom:8px}
+.col-title{font-family:var(--disp);font-weight:400;font-size:18px;line-height:1.5;margin:0 0 8px}
+.col-body{font-size:14px;line-height:1.95;margin:0}
+.col-foot{font-size:11px;color:var(--sub);margin:10px 0 0;text-align:right}
+
+/* タイマー */
+.presets{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.presets button{padding:6px 12px;border-radius:16px;border:1px solid var(--line);background:var(--paper);font-size:12px;color:var(--sub)}
+.presets button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper);font-weight:700}
+.steppers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.stp{border:1px solid var(--line);border-radius:10px;padding:6px;text-align:center;background:var(--paper)}
+.stp label{display:block;font-size:11px;color:var(--sub)}
+.stp div{display:flex;align-items:center;justify-content:space-between;gap:2px}
+.stp button{width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:var(--card);line-height:1;padding:0}
+.stp output{font-weight:700;font-size:13.5px;font-variant-numeric:tabular-nums}
+.face{text-align:center;border-radius:14px;padding:14px 8px 12px;border:1px solid transparent;transition:background-color .3s}
+.face.work{background:var(--paper);border-color:var(--gold-deep)}
+.face.rest{background:var(--def-bg);border-color:var(--def)}
+.face.prep{background:var(--paper);border-color:var(--line)}
+.phase{font-family:var(--num);letter-spacing:.08em;font-size:14px;color:var(--sub);min-height:22px}
+.time{font-family:var(--num);font-size:clamp(76px,23vw,104px);line-height:1;font-variant-numeric:tabular-nums}
+.time.rest{color:var(--def)}
+.time.warn{color:var(--kick);text-shadow:0 0 22px rgba(255,125,74,.35)}
+.pips{display:flex;gap:7px;justify-content:center;margin-top:10px;flex-wrap:wrap}
+.pips i{width:11px;height:11px;border-radius:3px;transform:rotate(45deg);background:var(--line)}
+.pips i.done{background:var(--gold)}
+.pips i.now{background:var(--kick)}
+.cue{font-size:12.5px;color:var(--ink);min-height:20px;margin-top:10px}
+.cue .steps{justify-content:center}
+.t-btns{display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+.t-btns button{padding:11px 22px;border-radius:22px;border:1px solid var(--line);background:var(--paper);font-size:13.5px}
+.t-btns button.main{background:var(--gold);border-color:var(--gold);color:var(--on-gold);font-weight:700;min-width:130px}
+.sound-row{display:flex;justify-content:center;gap:14px;margin-top:10px;font-size:12px;color:var(--sub)}
+.sound-row label{display:inline-flex;align-items:center;gap:6px}
+.sound-row input{accent-color:var(--gold);width:16px;height:16px}
+
+/* コンビ一覧 */
+.filters{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-bottom:10px}
+.filters::-webkit-scrollbar{display:none}
+.filters button{flex:none;padding:6px 14px;border-radius:16px;border:1px solid var(--line);background:var(--paper);font-size:12px;color:var(--sub)}
+.filters button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper);font-weight:700}
+.combos{list-style:none;margin:0;padding:0}
+.combo{border-top:1px solid var(--line);padding:14px 2px}
+.combo:last-child{border-bottom:1px solid var(--line)}
+.c-top{display:flex;align-items:flex-start;gap:8px}
+.c-name{flex:1;font-weight:700;font-size:14px;line-height:1.5;min-width:0}
+.c-name small{display:block;font-weight:500;color:var(--sub);font-size:11.5px}
+.fav{flex:none;width:40px;height:40px;margin:-8px -6px 0 0;border:0;background:transparent;font-size:20px;line-height:1;color:var(--line)}
+.fav[aria-pressed="true"]{color:var(--gold)}
+.c-tip{font-size:12.5px;color:var(--sub);margin:4px 0 8px}
+.c-acts{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.del{border:1px solid var(--line);background:transparent;border-radius:10px;padding:6px 12px;font-size:12px;color:var(--sub)}
+.empty{color:var(--sub);font-size:13px;padding:14px 2px}
+
+/* 記録 */
+.mic-wrap{display:flex;flex-direction:column;align-items:center;gap:6px;margin:2px 0 10px}
+.mic{width:80px;height:80px;border-radius:50%;border:0;background:var(--def);color:#0d1f17;display:flex;align-items:center;justify-content:center}
+.mic svg{width:34px;height:34px}
+.mic.on{background:var(--kick);animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,125,74,.45)}50%{box-shadow:0 0 0 14px rgba(255,125,74,0)}}
+.mic-st{font-size:12px;color:var(--sub);text-align:center;min-height:20px}
+.fld{display:block;font-size:11.5px;color:var(--sub);margin:12px 0 4px}
+.inp{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--paper);font-size:16px}
+textarea.inp{min-height:64px;resize:vertical;line-height:1.6}
+.preview{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:10px;margin-top:10px}
+.preview ol{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px}
+.preview li{display:flex;align-items:center;gap:8px;font-size:13px}
+.preview li .ord{font-family:var(--num);color:var(--gold);width:22px;text-align:right}
+.preview li .x{margin-left:auto;border:0;background:transparent;color:var(--sub);font-size:18px;width:32px;height:28px}
+.preview .nota{margin-top:8px}
+.preview .ph{color:var(--sub);font-size:12.5px;margin:0}
+.rec-btns{display:flex;gap:8px;margin-top:12px}
+.rec-btns button{flex:1;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--paper);font-size:13.5px}
+.rec-btns button.main{background:var(--def);border-color:var(--def);color:#0d1f17;font-weight:700}
+.rec-btns button:disabled{opacity:.4}
+.dict{margin-top:12px;font-size:12px;color:var(--sub)}
+.dict summary{cursor:pointer}
+.dict table{border-collapse:collapse;width:100%;margin-top:6px}
+.dict td{padding:3px 4px;border-top:1px solid var(--line);vertical-align:top}
+
+/* 履歴 */
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.stat{padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+.stat b{display:block;font-family:var(--num);font-weight:400;font-size:26px;line-height:1.2;font-variant-numeric:tabular-nums}
+.stat span{font-size:11px;color:var(--sub)}
+.hist details{border-top:1px solid var(--line)}
+.hist details:last-child{border-bottom:1px solid var(--line)}
+.hist summary{list-style:none;padding:12px 2px;cursor:pointer;display:flex;gap:12px;align-items:baseline}
+.hist summary::-webkit-details-marker{display:none}
+.hist summary .d{flex:none;font-size:11.5px;color:var(--sub);width:70px;font-variant-numeric:tabular-nums}
+.hist summary .t{flex:1;font-weight:700;font-size:13.5px;min-width:0}
+.hist summary .t small{display:block;font-weight:500;font-size:11px;color:var(--sub)}
+.hist summary .ok{flex:none;font-size:11.5px;color:var(--def);font-weight:700}
+.hist summary .ng{flex:none;font-size:11.5px;color:var(--sub)}
+.hist details[open] summary .t{color:var(--gold)}
+.hist .in{padding:0 2px 14px}
+.hist .in .col-body{font-size:13.5px}
+.hist .in .rd{margin-top:6px}
+.chk{border:1px solid var(--line);background:transparent;border-radius:10px;padding:6px 12px;font-size:12px;color:var(--sub);margin-top:10px}
+.more{display:block;margin:10px auto 0;border:0;background:transparent;color:var(--gold);font-size:12.5px;text-decoration:underline;text-underline-offset:3px}
+
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,30px);opacity:0;pointer-events:none;z-index:40;background:var(--card2);border:1px solid var(--gold-deep);color:var(--gold);font-weight:700;font-size:13px;padding:9px 18px;border-radius:20px;transition:transform .3s,opacity .3s;max-width:calc(100% - 32px)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.back{display:inline-block;margin-top:28px;font-size:12px;color:var(--sub)}
+@media (prefers-reduced-motion:reduce){.mic.on{animation:none}.toast,.face{transition:none}}
+</style>
+</head>
+<body>
+<main>
+  <div class="ropes" aria-hidden="true"><i></i><i></i><i></i></div>
+  <header>
+    <div class="head">
+      <div>
+        <p class="date-sub" id="dateSub"></p>
+        <h1 class="date-big" id="dateBig"></h1>
+      </div>
+      <div class="streak" id="streakBox"><b id="streakNum">0</b><span>日連続</span></div>
+    </div>
+    <div class="strip" id="strip" aria-label="直近14日の消化状況"></div>
+    <div class="strip-cap"><span>2週間前</span><span id="streakNote"></span><span>今日</span></div>
+  </header>
+
+  <nav class="jump" aria-label="セクション">
+    <a href="#sMenu">メニュー</a><a href="#sCol">コラム</a><a href="#sTimer">タイマー</a><a href="#sCombos">コンビ一覧</a><a href="#sRec">クラス記録</a><a href="#sHist">履歴</a>
+  </nav>
+
+  <section id="sMenu">
+    <h2>今日のおすすめメニュー</h2>
+    <div class="card" id="menuCard"></div>
+  </section>
+
+  <section id="sCol">
+    <h2>今日のコラム</h2>
+    <article class="card" id="colCard"></article>
+  </section>
+
+  <section id="sTimer">
+    <h2>ラウンドタイマー</h2>
+    <div class="card">
+      <div class="presets" id="presets"></div>
+      <div class="steppers" id="steppers"></div>
+      <div class="face" id="face">
+        <div class="phase" id="tPhase">READY</div>
+        <div class="time" id="tTime">3:00</div>
+        <div class="pips" id="tPips"></div>
+        <div class="cue" id="tCue"></div>
+      </div>
+      <div class="t-btns">
+        <button class="main" id="tMain">スタート</button>
+        <button id="tSkip">次へ</button>
+        <button id="tReset">リセット</button>
+      </div>
+      <div class="sound-row">
+        <label><input type="checkbox" id="optSound" checked>音で通知</label>
+        <label><input type="checkbox" id="optVoice" checked>音声で読み上げ</label>
+      </div>
+      <p class="note">ゴング3回でラウンド開始、ゴング1回で終了。残り10秒は拍子木、休憩の残り3秒はピッ・ピッ・ピーで知らせます。iPhoneはマナーモードだと音が出ないことがあります。</p>
+    </div>
+  </section>
+
+  <section id="sCombos">
+    <h2>コンビネーション一覧</h2>
+    <div class="filters" id="filters" role="group" aria-label="絞り込み"></div>
+    <ul class="combos" id="combos"></ul>
+    <p class="note">数字はパンチ番号（1 ジャブ／2 ストレート／3 左フック／4 右フック／5 左アッパー／6 右アッパー、b はボディ）。「蹴」はキック、「膝」「肘」、「守」はディフェンスです。▶はYouTubeの検索結果を開きます。</p>
+  </section>
+
+  <section id="sRec">
+    <h2>クラスで習ったコンビを記録</h2>
+    <div class="card">
+      <div class="mic-wrap">
+        <button class="mic" id="micBtn" aria-label="音声入力を開始">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+        </button>
+        <div class="mic-st" id="micSt">マイクを押して「ジャブ、ストレート、左ミドル」のように話してください</div>
+      </div>
+      <label class="fld" for="recText">聞き取った内容（手で直してもOK）</label>
+      <textarea class="inp" id="recText" placeholder="例：ジャブ、ストレート、左ミドル"></textarea>
+      <div class="preview" id="recPrev"></div>
+      <label class="fld" for="recName">名前（空欄なら自動）</label>
+      <input class="inp" id="recName" type="text" placeholder="例：火曜クラスのコンビ">
+      <label class="fld" for="recMemo">メモ（コツ・先生のひとこと）</label>
+      <textarea class="inp" id="recMemo" placeholder="例：ミドルは軸足を返す"></textarea>
+      <div class="rec-btns">
+        <button id="recClear">クリア</button>
+        <button class="main" id="recSave" disabled>保存する</button>
+      </div>
+      <details class="dict">
+        <summary>認識できる言葉</summary>
+        <table><tbody id="dictBody"></tbody></table>
+      </details>
+    </div>
+  </section>
+
+  <section id="sHist">
+    <h2>記録と履歴</h2>
+    <div class="stats" id="stats"></div>
+    <div class="filters" id="histTabs" role="group" aria-label="履歴の種類"></div>
+    <div class="hist" id="hist"></div>
+  </section>
+
+  <a class="back" href="../">← おかまるパワプロへ</a>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+/* ===== 日付 ===== */
+const pad=n=>String(n).padStart(2,"0");
+const dk=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const fromKey=k=>{ const [y,m,d]=k.split("-").map(Number); return new Date(y,m-1,d); };
+const dayNum=k=>{ const [y,m,d]=k.split("-").map(Number); return Math.floor(Date.UTC(y,m-1,d)/864e5); };
+const addDays=(k,n)=>{ const d=fromKey(k); d.setDate(d.getDate()+n); return dk(d); };
+const WD="日月火水木金土";
+const shortDate=k=>{ const d=fromKey(k); return `${d.getMonth()+1}/${d.getDate()}（${WD[d.getDay()]}）`; };
+const TODAY=()=>dk(new Date());
+
+/* ===== 保存（この端末の localStorage） ===== */
+const KEY="okamaru-boxing:v1";
+const st=(()=>{
+  let s=null; try{ s=JSON.parse(localStorage.getItem(KEY)||"null"); }catch(e){}
+  s=s&&typeof s==="object"?s:{};
+  return {done:{},favs:[],recs:[],timer:{work:180,rest:60,rounds:6},sound:true,voice:true,...s};
+})();
+function save(){ try{ localStorage.setItem(KEY,JSON.stringify(st)); }catch(e){ toast("この端末に保存できませんでした"); } }
+
+let toastT=0;
+function toast(t){ const el=$("toast"); el.textContent=t; el.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove("show"),2200); }
+
+/* ===== 技の辞書と音声→コンビ変換 ===== */
+const SIDE={L:"左",R:"右"};
+// k: p=パンチ k=キック d=ディフェンス / showSide: 表示に左右を付けるか / badge: 番号の代わりに出す字
+const MOVE={
+  jab:  {k:"p",def:"L",core:"ジャブ",showSide:s=>s==="R",num:s=>s==="R"?2:1},
+  str:  {k:"p",def:"R",core:"ストレート",showSide:s=>s==="L",num:s=>s==="L"?1:2},
+  hook: {k:"p",def:"L",core:"フック",showSide:()=>true,num:s=>s==="L"?3:4},
+  upr:  {k:"p",def:"R",core:"アッパー",showSide:()=>true,num:s=>s==="L"?5:6},
+  mid:  {k:"k",def:"R",core:"ミドル",badge:"蹴"},
+  low:  {k:"k",def:"R",core:"ロー",badge:"蹴"},
+  inlow:{k:"k",def:"L",core:"インロー",badge:"蹴"},
+  calf: {k:"k",def:"R",core:"カーフ",badge:"蹴"},
+  high: {k:"k",def:"R",core:"ハイ",badge:"蹴"},
+  teep: {k:"k",def:"L",core:"前蹴り",badge:"蹴"},
+  knee: {k:"k",def:"R",core:"ヒザ",badge:"膝"},
+  elbow:{k:"k",def:"R",core:"ヒジ",badge:"肘"},
+  duck: {k:"d",core:"ダッキング"}, weave:{k:"d",core:"ウィービング"}, sway:{k:"d",core:"スウェー"},
+  parry:{k:"d",core:"パリー"}, block:{k:"d",core:"ブロック"}, cut:{k:"d",core:"カット（すねで受ける）"},
+  back: {k:"d",core:"バックステップ"}, step:{k:"d",core:"サイドステップ"}, pivot:{k:"d",core:"ピボット"},
+  roll: {k:"d",core:"ローリング"}, clinch:{k:"d",core:"首相撲"}
+};
+const NUM={1:["jab","L"],2:["str","R"],3:["hook","L"],4:["hook","R"],5:["upr","L"],6:["upr","R"]};
+// 聞き取り結果はひらがな→カタカナに直してから照合する（「前蹴り」→「前蹴リ」）
+const WORDS=[
+  [["左","ヒダリ","レフト"],{side:"L"}],[["右","ミギ","ライト"],{side:"R"}],
+  [["ワンツー"],{mvs:["jab","str"]}],
+  [["ワン","1"],{num:1}],[["ツー","2"],{num:2}],[["スリー","3"],{num:3}],[["フォー","4"],{num:4}],[["ファイブ","5"],{num:5}],[["シックス","6"],{num:6}],
+  [["ジャブ"],{mv:"jab"}],[["ストレート","ストレイト","クロス"],{mv:"str"}],[["フック"],{mv:"hook"}],[["アッパーカット","アッパー"],{mv:"upr"}],
+  [["ボディ","ボデー"],{body:1}],[["ダブル"],{mult:2}],[["トリプル"],{mult:3}],[["スイッチ"],{sw:1}],
+  [["スイッチキック"],{mv:"mid",swk:1}],
+  [["ミドルキック","ミドル","キック"],{mv:"mid"}],
+  [["ローキック","ロー"],{mv:"low"}],[["インローキック","インロー"],{mv:"inlow"}],[["カーフキック","カーフ"],{mv:"calf"}],
+  [["ハイキック"],{mv:"high"}],[["ハイ"],{mv:"high",needSide:1}],
+  [["前蹴リ","前ゲリ","マエゲリ","マエ蹴リ","前キック","フロントキック","ティープ","プッシュキック"],{mv:"teep"}],
+  [["膝蹴リ","ヒザ蹴リ","ヒザゲリ","膝","ヒザ","ニーキック","ニー","テンカオ"],{mv:"knee"}],
+  [["肘打チ","ヒジ打チ","肘","ヒジ","エルボー","エルボ"],{mv:"elbow"}],
+  [["ダッキング","ダック"],{mv:"duck"}],[["ウィービング","ウイービング","ウェービング","ウェイビング","ウィーブ","ウェーブ"],{mv:"weave"}],
+  [["スウェー","スウェイ","スエー"],{mv:"sway"}],[["パリー","パリング","パーリング"],{mv:"parry"}],[["ブロック","ガード"],{mv:"block"}],
+  [["カット","チェック"],{mv:"cut"}],[["バックステップ"],{mv:"back"}],[["サイドステップ","ステップ"],{mv:"step"}],[["ピボット"],{mv:"pivot"}],
+  [["ローリング"],{mv:"roll"}],[["首相撲","クリンチ"],{mv:"clinch"}],
+  // 技名の一部に見えて別の意味の言葉は読み飛ばす
+  [["ブロー","フォロー","スロー","コントロール","フロー"],{ign:1}]
+];
+const ACT=new Map(); WORDS.forEach(([ws,a])=>ws.forEach(w=>ACT.set(w,a)));
+const RX=new RegExp([...ACT.keys()].sort((a,b)=>b.length-a.length).map(w=>w.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|"),"g");
+const norm=t=>String(t).normalize("NFKC").replace(/[ぁ-ゖ]/g,c=>String.fromCharCode(c.charCodeAt(0)+0x60));
+
+function parseCombo(text){
+  const s=norm(text), out=[]; let side=null, body=null, mult=1, sw=false, m;
+  const emit=(t,sd,extra)=>{ const d=MOVE[t], mv={t,...extra}; if(d.k!=="d") mv.s=sd||d.def; for(let i=0;i<mult;i++) out.push({...mv}); mult=1; };
+  // 「左ボディ」のように単独で言われたらボディフック
+  const flushBody=()=>{ if(body){ const b=body; body=null; emit("hook",b.side||"L",{b:1}); } };
+  const isPunch=a=>a.num||a.mvs||(a.mv&&MOVE[a.mv].k==="p");
+  RX.lastIndex=0;
+  while((m=RX.exec(s))){
+    const a=ACT.get(m[0]);
+    if(body&&!(isPunch(a)&&m.index-body.end<=1)) flushBody();
+    if(a.ign) continue;
+    if(a.side){ side=a.side; continue; }
+    if(a.body){ body={side,end:m.index+m[0].length}; side=null; continue; }
+    if(a.mult){ mult=a.mult; continue; }
+    if(a.sw){ sw=true; continue; }
+    if(a.needSide&&!side) continue;
+    if(a.mvs){ a.mvs.forEach(t=>emit(t,null,{})); side=null; sw=false; continue; }
+    let t=a.mv, sd=side; const extra={};
+    if(a.num){ t=NUM[a.num][0]; sd=NUM[a.num][1]; }
+    if(body){ extra.b=1; sd=sd||body.side; body=null; }
+    if((sw||a.swk)&&MOVE[t].k==="k"){ extra.sw=1; sd=sd||"L"; }
+    emit(t,sd,extra); side=null; sw=false;
+  }
+  flushBody();
+  return out;
+}
+function label(m){
+  const d=MOVE[m.t]; if(d.k==="d") return d.core;
+  const showSide=d.showSide?d.showSide(m.s):true;
+  return (showSide?SIDE[m.s]:"")+(m.b?"ボディ":"")+d.core+(m.sw?"（スイッチ）":"");
+}
+function badge(m){ const d=MOVE[m.t]; if(d.k==="p") return d.num(m.s)+(m.b?"b":""); return d.badge||"守"; }
+const cls=m=>MOVE[m.t].k;
+const notation=ms=>ms.map(m=>cls(m)==="p"?badge(m):label(m).replace("（すねで受ける）","")).join(" - ");
+const stepsHTML=ms=>`<ol class="steps">${ms.map((m,i)=>`${i?'<li class="arr" aria-hidden="true">›</li>':""}<li class="st ${cls(m)}"><b>${esc(badge(m))}</b>${esc(label(m))}</li>`).join("")}</ol>`;
+const hasKick=ms=>ms.some(m=>cls(m)==="k");
+const ytURL=q=>"https://www.youtube.com/results?search_query="+encodeURIComponent(q);
+const ytHTML=(q,t="YouTubeで見る")=>`<a class="yt" href="${ytURL(q)}" target="_blank" rel="noopener">${esc(t)}</a>`;
+
+/* ===== コンビネーション（ボクシング＋キックボクシング） ===== */
+const COMBOS=[
+  {id:"b1",cat:"box",lv:1,tags:["basic"],name:"ワンツー",seq:"ジャブ、ストレート",tip:"ストレートは後ろ足のかかとを外に返し、腰ごと打ち込む。",q:"ボクシング ワンツー 打ち方"},
+  {id:"b2",cat:"box",lv:1,tags:["basic"],name:"ダブルジャブ→ストレート",seq:"ジャブ、ジャブ、ストレート",tip:"1発目は距離を測る軽いジャブ、2発目で踏み込む。",q:"ボクシング ダブルジャブ ストレート"},
+  {id:"b3",cat:"box",lv:1,tags:["basic"],name:"ワンツー→左フック",seq:"ジャブ、ストレート、左フック",tip:"ストレートで回した腰を戻す力でフックを打つ。",q:"ボクシング ワンツースリー コンビネーション"},
+  {id:"b4",cat:"box",lv:2,tags:["power"],name:"1-2-3-2",seq:"ジャブ、ストレート、左フック、ストレート",tip:"最後のストレートまで足を止めずに。打ち終わりはガードへ。",q:"ボクシング 1-2-3-2 コンビネーション"},
+  {id:"b5",cat:"box",lv:2,tags:["body"],name:"ジャブ→左ボディ→左フック",seq:"ジャブ、左ボディフック、左フック",tip:"ボディは膝を曲げて沈む。同じ手で上下に打ち分ける。",q:"ボクシング 左ボディ 顔面 ダブル フック"},
+  {id:"b6",cat:"box",lv:2,tags:["body"],name:"ワンツー→左ボディ→左フック",seq:"ジャブ、ストレート、左ボディフック、左フック",tip:"ボディで相手のガードを下げさせてから顔面へ。",q:"ボクシング ワンツー ボディ フック コンビネーション"},
+  {id:"b7",cat:"box",lv:2,tags:["power"],name:"右アッパー→左フック→ストレート",seq:"右アッパー、左フック、ストレート",tip:"接近戦用。アッパーは脚で床を押して伸び上がる。",q:"ボクシング アッパー フック ストレート コンビネーション"},
+  {id:"b8",cat:"box",lv:3,tags:["power"],name:"1-6-3-2",seq:"ジャブ、右アッパー、左フック、ストレート",tip:"ジャブで相手のガードを固めさせ、下から崩す。",q:"ボクシング 1-6-3-2 コンビネーション"},
+  {id:"b9",cat:"box",lv:2,tags:["def"],name:"ワンツー→ダッキング→3-2",seq:"ジャブ、ストレート、ダッキング、左フック、ストレート",tip:"打ったら相手の返しを想定して沈み、すぐ打ち返す。",q:"ボクシング ダッキング 返し コンビネーション"},
+  {id:"b10",cat:"box",lv:1,tags:["def"],name:"パリー→ワンツー",seq:"パリー、ジャブ、ストレート",tip:"右手で相手のジャブを軽くはじき、すかさず返す。",q:"ボクシング パーリング カウンター ワンツー"},
+  {id:"b11",cat:"box",lv:2,tags:["def"],name:"スウェー→ストレート→左フック",seq:"スウェー、ストレート、左フック",tip:"反らした上体が戻る勢いをストレートに乗せる。",q:"ボクシング スウェー カウンター"},
+  {id:"b12",cat:"box",lv:2,tags:["def"],name:"ウィービング→左右フック",seq:"ウィービング、左フック、右フック",tip:"頭でU字を描いてフックをくぐり、出た側から打つ。",q:"ボクシング ウィービング フック 練習"},
+  {id:"b13",cat:"box",lv:2,tags:["body"],name:"ボディストレート→顔面",seq:"ジャブ、ボディストレート、左フック、ストレート",tip:"ボディストレートは膝を曲げて目線の高さを落とす。",q:"ボクシング ボディストレート コンビネーション"},
+  {id:"b14",cat:"box",lv:3,tags:["power"],name:"6連打（1〜6）",seq:"ジャブ、ストレート、左フック、右フック、左アッパー、右アッパー",tip:"1発ずつ腰を返す。速さよりリズムを優先。",q:"ボクシング 連打 コンビネーション シャドー"},
+  {id:"b15",cat:"box",lv:1,tags:["basic","def"],name:"ジャブ→サイドステップ→ワンツー",seq:"ジャブ、サイドステップ、ジャブ、ストレート",tip:"打ったら1歩横へ。角度を変えてから打ち直す。",q:"ボクシング サイドステップ 角度 ワンツー"},
+  {id:"k1",cat:"kick",lv:1,tags:["basic"],name:"ワンツー→右ロー",seq:"ジャブ、ストレート、右ロー",tip:"パンチで意識を上に集め、空いた足元を蹴る。",q:"キックボクシング ワンツー ローキック"},
+  {id:"k2",cat:"kick",lv:1,tags:["basic"],name:"ジャブ→右ミドル",seq:"ジャブ、右ミドル",tip:"軸足のつま先を外に開いて腰を回す。",q:"キックボクシング ジャブ ミドルキック"},
+  {id:"k3",cat:"kick",lv:2,tags:["basic"],name:"ワンツー→左ミドル",seq:"ジャブ、ストレート、左ミドル",tip:"ストレートで回した腰の戻りを左ミドルに使う。",q:"キックボクシング ワンツー 左ミドル"},
+  {id:"k4",cat:"kick",lv:2,tags:["power"],name:"1-2-3→右ロー",seq:"ジャブ、ストレート、左フック、右ロー",tip:"左フックで体が右に回る勢いのまま右ローへ。定番のつなぎ。",q:"キックボクシング ワンツー フック ロー オランダ"},
+  {id:"k5",cat:"kick",lv:1,tags:["basic"],name:"前蹴り→ワンツー",seq:"左前蹴り、ジャブ、ストレート",tip:"前蹴りで距離をつくり、着地と同時にジャブ。",q:"キックボクシング 前蹴り ワンツー"},
+  {id:"k6",cat:"kick",lv:3,tags:["power"],name:"ワンツー→左ハイ",seq:"ジャブ、ストレート、左ハイ",tip:"ハイは無理に高く上げず、まず軸足を返すこと。",q:"キックボクシング ワンツー 左ハイキック"},
+  {id:"k7",cat:"kick",lv:2,tags:["def"],name:"カット→右ロー返し",seq:"カット、右ロー",tip:"すねで受けたら、足を下ろした反動ですぐ蹴り返す。",q:"キックボクシング ローキック カット 返し"},
+  {id:"k8",cat:"kick",lv:2,tags:["basic"],name:"左インロー→ストレート→左フック",seq:"左インロー、ストレート、左フック",tip:"インローで相手の前足を止めてからパンチへ。",q:"キックボクシング インロー コンビネーション"},
+  {id:"k9",cat:"kick",lv:2,tags:["basic"],name:"右ミドル→ワンツー",seq:"右ミドル、ジャブ、ストレート",tip:"蹴った足を前に下ろし、そのままパンチに移る。",q:"キックボクシング ミドルキック からの パンチ"},
+  {id:"k10",cat:"kick",lv:2,tags:["power"],name:"ワンツー→右ヒザ",seq:"ジャブ、ストレート、右ヒザ",tip:"腰を前に押し出し、膝の先を突き刺すイメージ。",q:"キックボクシング ワンツー 膝蹴り"},
+  {id:"k11",cat:"kick",lv:2,tags:["body"],name:"ジャブ→左ボディ→右ロー",seq:"ジャブ、左ボディ、右ロー",tip:"ボディで沈んだ姿勢から、そのまま右ローを蹴る。",q:"キックボクシング ボディ ローキック コンビネーション"},
+  {id:"k12",cat:"kick",lv:1,tags:["basic"],name:"左フック→右ミドル",seq:"左フック、右ミドル",tip:"フックで右に回った腰の反動を、右ミドルに乗せる。",q:"キックボクシング 左フック 右ミドル"},
+  {id:"k13",cat:"kick",lv:3,tags:["power"],name:"1-2-3→右ハイ",seq:"ジャブ、ストレート、左フック、右ハイ",tip:"パンチで顔の横を意識させてから、反対側の頭を狙う。",q:"キックボクシング ワンツースリー ハイキック"},
+  {id:"k14",cat:"kick",lv:2,tags:["def"],name:"スウェー→ストレート→右ミドル",seq:"スウェー、ストレート、右ミドル",tip:"避けて戻る勢いを使う。ミドルまで上体のガードを下げない。",q:"キックボクシング スウェー カウンター ミドル"},
+  {id:"k15",cat:"kick",lv:2,tags:["basic"],name:"ジャブ→右カーフ→ストレート",seq:"ジャブ、右カーフ、ストレート",tip:"ふくらはぎを狙う低いロー。蹴ったらすぐ構え直す。",q:"キックボクシング カーフキック 蹴り方"}
+].map(c=>({...c,moves:parseCombo(c.seq)}));
+const byId=id=>COMBOS.find(c=>c.id===id)||recCombos().find(c=>c.id===id);
+const recCombos=()=>st.recs.map(r=>({id:r.id,cat:hasKick(r.moves)?"kick":"box",mine:1,lv:0,name:r.name,moves:r.moves,tip:r.memo,date:r.date,raw:r.raw,
+  q:(hasKick(r.moves)?"キックボクシング ":"ボクシング ")+r.moves.map(label).join(" ").replace("（すねで受ける）","")+" コンビネーション"}));
+
+/* ===== 毎日のメニュー ===== */
+function rng(seed){ let a=seed>>>0; return ()=>{ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+// 曜日ごとのテーマ。slots はラウンドごとの候補（box/kick はカテゴリ、他はタグ）
+const THEMES=[
+  {name:"日曜はフォーム確認デー",focus:"7割の力で、ゆっくり正確に。鏡があれば鏡の前で。",slots:["box:basic","kick:basic","box:def","kick:basic"],finisher:"ゆっくりシャドー 1R（フォームだけを意識）"},
+  {name:"ジャブとワンツーを磨く",focus:"すべての基本はジャブ。打ったら同じ軌道で素早く戻す。",slots:["box:basic","box:basic","box:power","kick:basic","box:def","box:basic"],finisher:"ジャブだけ 30秒全力 ×3（休憩15秒）"},
+  {name:"キックの日",focus:"軸足を返して腰で蹴る。蹴ったらすぐ構えに戻る。",slots:["kick:basic","kick:basic","kick:power","box:basic","kick:def","kick:any"],finisher:"左右ミドル交互 20回 ×2"},
+  {name:"ボディ攻撃の日",focus:"膝を曲げて沈み、上下に打ち分ける。",slots:["box:basic","box:body","box:body","kick:body","box:power","kick:basic"],finisher:"ボディ連打 30秒 ×3 → 腹筋 20回"},
+  {name:"守ってから返す",focus:"かわす・はじく・受ける、の直後に必ず打ち返す。",slots:["box:def","box:basic","box:def","kick:def","box:def","kick:basic"],finisher:"ダッキング＆ウィービング 1分 ×2"},
+  {name:"パンチ→キックのミックス",focus:"パンチで上を意識させ、空いた下を蹴る。",slots:["box:basic","kick:basic","kick:power","box:power","kick:body","kick:power"],finisher:"ワンツー→ロー 左右交互 30回"},
+  {name:"スタミナラッシュ",focus:"最後まで手を止めない。苦しい時こそ呼吸を吐く。",slots:["box:basic","kick:basic","box:power","kick:power","box:power","kick:power"],finisher:"ストレート連打 30秒 ×4（休憩10秒）"}
+];
+const menuCache={};
+function menuFor(k){
+  if(menuCache[k]) return menuCache[k];
+  const th=THEMES[fromKey(k).getDay()], r=rng(dayNum(k)*2654435761), used=new Set();
+  const rounds=th.slots.map(sl=>{
+    const [cat,tag]=sl.split(":");
+    let pool=COMBOS.filter(c=>c.cat===cat&&(tag==="any"||c.tags.includes(tag))&&!used.has(c.id));
+    if(!pool.length) pool=COMBOS.filter(c=>c.cat===cat&&!used.has(c.id));
+    const c=pool[Math.floor(r()*pool.length)]; used.add(c.id); return c.id;
+  });
+  return menuCache[k]={theme:th,rounds};
+}
+
+/* ===== 毎日のコラム（約300字） ===== */
+const COLUMNS=[
+  {tag:"テクニック",title:"ジャブは「距離を測る物差し」",body:"ボクシングで最も多く打たれるパンチがジャブです。「ジャブを制する者は世界を制す」という言葉があるほど、試合の流れを左右します。ジャブの役割は、相手を倒すことより、距離を測り、相手の視界とリズムを乱すこと。打つときは前の肩をあごに寄せて顔を守り、拳は打ったのと同じ軌道で素早く戻します。腕だけで伸ばしても届かないので、前足を半歩踏み込みながら体重を少し乗せるのがコツ。ボクササイズでも、ジャブを「シュッ」と鋭く出せるようになると、その後のストレートやフックが自然につながります。今日はまず、ジャブを10発、戻しの速さだけを意識して打ってみましょう。"},
+  {tag:"選手エピソード",title:"アリの「蝶のように舞い、蜂のように刺す」",body:"モハメド・アリ（旧名カシアス・クレイ）は1960年のローマ五輪で金メダルを獲得し、プロではヘビー級王者として一時代を築きました。彼のスタイルを表した言葉が「蝶のように舞い、蜂のように刺す」。大きな体で軽やかにステップを踏み、相手のパンチを外しながら鋭いジャブを突き刺しました。1974年、無敵と思われた強打者ジョージ・フォアマンとの「キンシャサの奇跡」では、ロープにもたれて相手の連打を受け流し、疲れたところを8回に逆転KO。足を使うだけでなく、状況に合わせて戦い方を変える頭脳こそが、アリの最大の武器でした。今日のシャドーでは、打ったら必ず一歩動く「アリの足」を意識してみましょう。"},
+  {tag:"トレーニング",title:"「3分動いて1分休む」の理由",body:"プロボクシングの1ラウンドは原則3分、インターバルは1分です。ボクササイズのタイマーでもこの区切りを使うのには理由があります。3分間は、全力に近い動きを続けると心拍数が大きく上がり、ちょうど限界が見えてくる長さ。そこで1分休むと、呼吸はある程度戻るものの、完全には回復しきりません。この「追い込み」と「不完全な回復」の繰り返しが、心肺機能と筋持久力を効率よく鍛えてくれます。休憩の1分は座り込まず、肩を回したり深呼吸したりしながら軽く歩くのがおすすめ。体を冷やさずに次のラウンドへ入れるので、後半もフォームが崩れにくくなります。"},
+  {tag:"キックボクシング",title:"ローキックは「パンチのあと」に",body:"キックボクシングで多用されるローキック（太もも外側への蹴り）は、単発で蹴るより、パンチのあとに蹴ると当たりやすくなります。パンチを打たれると相手は顔を守ろうと意識が上に向き、足元への注意が薄れるからです。オランダのジムで磨かれたスタイルは「パンチからローへ」のつなぎが代名詞で、ワンツーから左フック、そこへ右ローを合わせる形は今も定番です。蹴るときは軸足のつま先を外へ開き、腰を回してすねを当てる意識で。足先だけで蹴ると威力が出ないうえ、足の甲を痛めやすいので注意しましょう。今日のメニューにローがあれば、ぜひパンチとセットで。"},
+  {tag:"体のケア",title:"バンテージは拳の保険",body:"グローブの中に巻くバンテージ（ハンドラップ）は、拳と手首を守るための大切な道具です。人の手は小さな骨がたくさん集まってできていて、パンチの衝撃が繰り返しかかると、骨や関節を痛めやすくなります。バンテージで手首を固定し、拳頭（人さし指と中指のつけ根）を覆うことで、衝撃が分散されます。巻くときのポイントは、指を軽く開いた状態で巻くこと。指を閉じたまま巻くと、拳を握ったときにきつくなりすぎて血流が悪くなります。使い終わったら洗ってよく乾かし、くるくると巻き戻しておくと、次回すぐに使えて衛生的です。サンドバッグを打つ日は特に忘れずに。"},
+  {tag:"選手エピソード",title:"タイソンと「ピーカブー」",body:"マイク・タイソンは1986年、20歳でWBC世界ヘビー級王座を獲得し、史上最年少のヘビー級世界王者になりました。彼を育てたのが名トレーナーのカス・ダマトです。ダマトが教えた「ピーカブースタイル」は、両拳を顔の前に高く構え、頭を細かく左右に振りながら距離を詰めていく戦い方。名前は英語の「いないいないばあ」に由来します。ヘビー級としては身長が高くないタイソンは、上体を振って相手のパンチをかわし、懐に潜り込んでから強烈なフックやアッパーを叩き込みました。体格で劣る人こそ「頭を動かす」ことが武器になる、という好例です。今日のシャドーでは、打つ前に頭を一度振ってみましょう。"},
+  {tag:"テクニック",title:"パンチは「吐いて」打つ",body:"パンチを打つたびに「シュッ」と短く息を吐く。これはボクシングの基本動作のひとつです。息を止めたまま動くと体がこわばってスピードが落ち、すぐに息が上がってしまいます。短く鋭く吐くと、お腹まわりに自然と力が入り、体幹が締まってパンチがぶれにくくなります。また、打たれた瞬間にお腹を固めておけるのも、吐く呼吸の効果です。ボクササイズでは、コンビネーションの数だけ「シュッ、シュッ」と声に出すくらいでちょうどいい。呼吸とパンチのリズムがそろうと、ラウンドの後半でも動きが止まりにくくなります。苦しくなってきたら、まず「吸う」より「吐く」を意識しましょう。"},
+  {tag:"キックボクシング",title:"ムエタイの儀式「ワイクルー」",body:"タイの国技ムエタイでは、試合の前に「ワイクルー」と呼ばれる舞いを披露します。師匠や両親、ジムへの敬意と感謝を表すもので、選手ごとに所作や動きに違いがあります。試合中は伝統音楽「サラマー」の生演奏が流れ、ラウンドが進むにつれて曲のテンポが上がり、会場の熱気も高まっていきます。ムエタイの採点では、ミドルキックや膝蹴り、首相撲での攻防が高く評価されやすく、序盤のラウンドは様子見になることも多いのが特徴です。同じ立ち技でも、ボクシングやK-1とは試合の流れ方がまったく違うのです。キックの練習をするときは、少しだけムエタイのリズムを思い浮かべてみてください。"},
+  {tag:"トレーニング",title:"縄跳びはフットワークそのもの",body:"ボクサーの練習といえば縄跳び。単なる準備運動ではなく、ボクシングに必要な要素が詰まったトレーニングです。つま先で軽く弾むリズムはフットワークそのもので、ふくらはぎや足首のバネを鍛えます。一定のリズムで跳び続けることで心肺機能が上がり、手首で縄を回す動きは肩まわりの持久力にもつながります。縄がなくても、その場で軽く跳ねるだけで効果は十分。ポイントは、かかとを床につけず、膝を軽く曲げて静かに着地すること。ドスンと着地すると、膝や腰に負担がかかります。ウォームアップに2〜3分取り入れると、その後のシャドーで足が驚くほど軽く動きます。"},
+  {tag:"選手エピソード",title:"井上尚弥の土台にあるもの",body:"「モンスター」の異名を持つ井上尚弥は、バンタム級とスーパーバンタム級の2階級で主要4団体の王座を統一した、日本ボクシング史上屈指の選手です。強烈なパンチ力が注目されがちですが、その土台にあるのは正確なジャブと、相手の動きを見切る目、そして素早い踏み込み。特にボディへの左フックは、多くの相手を沈めてきた代名詞です。幼いころから、父でありトレーナーでもある真吾さんと基本を積み重ねてきたことでも知られています。派手な一撃も、地道な基本の上に成り立っている。私たちのボクササイズにも通じる教えです。今日のワンツーも、1発1発を丁寧に。"},
+  {tag:"テクニック",title:"フックは腕で打たない",body:"フックは横から弧を描くように打つパンチ。腕を大きく振り回すイメージを持たれがちですが、実は腕の形はほぼ固定し、体の回転で打つのが正解です。肘はおよそ90度に曲げ、拳・肘・肩が床と平行になるように構えます。そのまま前足のつま先と膝を内側にひねり、腰と肩をまとめて回すと、腕は自然に振られます。大振りになると隙が大きくなり、相手から丸見えになるので、拳はあごの高さから最短距離で出すのがコツ。打ったら、反対の手はしっかり顔の横に置いておきましょう。ガードを忘れたフックは、カウンターのいい的になってしまいます。鏡の前で、肘の高さがそろっているかも確かめてみましょう。"},
+  {tag:"キックボクシング",title:"ローキックは「すね」で受ける",body:"キックボクシングでローキックを受けるときの基本の防御が「カット（チェック）」です。蹴られる側の足の膝を外側に向けて持ち上げ、すねの硬い部分で相手の蹴りを受け止めます。太ももの外側で受け続けるとダメージがたまり、足が動かなくなってしまいますが、すねで受ければ、逆に蹴った側が痛みを感じることもあります。ポイントは、足を上げても上体のガードを下げないこと、そして軸足でしっかり立つこと。ボクササイズでは、ステップの合間に左右の膝を素早く上げる「カットの素振り」を入れるだけで、バランス感覚と体幹のよいトレーニングになります。"},
+  {tag:"歴史",title:"日本初の世界王者・白井義男",body:"1952年5月19日、白井義男がダド・マリノを破り、世界フライ級王座を獲得しました。日本人として初めての世界王者の誕生です。戦後まもない時代、焼け跡から立ち上がろうとしていた日本の人々にとって、この勝利は大きな希望になったと言われています。白井を指導したのは、GHQの職員だったアメリカ人のアルビン・カーン博士。科学的なトレーニングや栄養管理を取り入れ、守りを固めて正確に打つボクシングを白井に教えました。今では当たり前の「理にかなった練習」が、日本の世界王者第1号を生んだのです。根性だけでなく、考えて練習することの大切さを教えてくれるエピソードです。"},
+  {tag:"トレーニング",title:"シャドーは「相手ありき」で",body:"相手がいない状態で動くシャドーボクシングは、ひとりでもできる最高の練習です。ただ漫然と拳を出すのではなく、目の前に相手がいると想像するのがコツ。相手がジャブを打ってきたらかわし、空いたところに返す――と、攻めと守りをセットで考えると、動きが実戦的になります。鏡の前で行えば、ガードが下がっていないか、あごが上がっていないかも確認できます。打ったあとに拳をきちんと顔の前に戻す、パンチの間も足を止めない。この2つを守るだけでも見違えるほど良くなります。今日のメニューの1ラウンド目を、ぜひ「相手がいるつもり」でやってみましょう。"},
+  {tag:"選手エピソード",title:"ブアカーオのミドルキック",body:"タイのブアカーオ・バンチャメークは、K-1 WORLD MAXで2004年と2006年に優勝した、立ち技格闘技を代表するスター選手です。ムエタイで鍛えた強烈なミドルキックと膝蹴り、そして相手を崩す首相撲を武器に、日本のリングでも数々の名勝負を繰り広げました。代名詞のミドルキックは、ガードの上からでも相手の腕にダメージを与えるほどの重さだったと言われます。その強さを支えていたのは、毎日の走り込みと、何百回も繰り返すミット打ち。地道な反復こそが、疲れても崩れないフォームを作るのです。今日のキックも、回数より1本1本の形を大切に。"},
+  {tag:"テクニック",title:"ボディは後から効いてくる",body:"「ボディは後から効いてくる」と言われるように、腹部への攻撃は試合の後半になるほど相手の動きを鈍らせます。特に有名なのが、相手の右わき腹を狙う左ボディフック。ここには肝臓（レバー）があり、きれいに当たると呼吸が止まるほどのダメージになります。打つときは膝を少し曲げて重心を落とし、体ごと沈み込むのがコツ。腕だけ下げて打つと顔が空いてしまうので、目線は相手から外さず、右手のガードはしっかりあごに。ボクササイズでは、顔面とボディを交互に打ち分けることで上下の動きが加わり、脚とお腹にもしっかり効いてきます。沈む・戻るの上下運動は、スクワットに近い効果があります。"},
+  {tag:"キックボクシング",title:"前蹴りは足のジャブ",body:"前蹴りは、足の裏で相手を押すように蹴る技で、ムエタイでは「ティープ」と呼ばれます。派手さはありませんが、相手との距離をコントロールするうえでとても重要な技です。相手が前に出てくるところに前蹴りを合わせれば、勢いを止めて体勢を崩せます。ボクシングでいえば、ジャブに近い役割を持つ技と言えるでしょう。蹴るときは膝を胸に引きつけてから、かかとを押し出すように伸ばし、蹴ったあとはすぐに足を戻して構え直します。ボクササイズでは、前蹴りから素早くワンツーにつなぐ練習が、バランスと体幹を同時に鍛えてくれます。最初は壁に手を添えて、膝の引きつけだけ練習するのも効果的です。"},
+  {tag:"メンタル",title:"続けるコツは「仕組み」",body:"運動を続けるうえで大切なのは、気合いよりも仕組みです。たとえば、やる時間を決めておく、ウェアを目につく場所に置いておく、そして記録をつける。連続記録が伸びていくと、それ自体がやる気の源になります。もし途中で途切れても、自分を責める必要はありません。習慣づくりの研究でも、たまに1日休んだくらいでは習慣化への影響は小さいとされています。大事なのは、翌日に再開すること。「今日は1ラウンドだけ」でも、体を動かした日は前進です。ボクサーも、毎日の小さな積み重ねでリングに立っています。今日のチェックをつけて、明日の自分にバトンを渡しましょう。"},
+  {tag:"テクニック",title:"アッパーは脚で突き上げる",body:"アッパーは下から突き上げるパンチ。相手が頭を下げて近づいてきたときや、ガードを固めて前に出てくるときに効果的です。打つコツは、腕を下げて振りかぶるのではなく、膝を軽く曲げて沈み、脚で床を押しながら体を伸び上がらせること。拳は自分のあごの高さから、相手のあごを目がけて最短距離で突き上げます。肘を体から離しすぎるとパンチが大回りになり、威力も落ちてしまいます。また、アッパーは打ったあとに顔が空きやすいパンチなので、打ったらすぐに拳を戻し、反対の手でガードを固めておくこと。下半身を使う分、太ももとお尻にもよく効きます。まずは片手ずつ、ゆっくり10回から始めましょう。"},
+  {tag:"選手エピソード",title:"魔裟斗とパンチ技術",body:"魔裟斗は、70kg級の世界一を決める「K-1 WORLD MAX」で2003年と2008年に優勝し、日本に立ち技格闘技ブームを巻き起こした選手です。キックボクサーでありながらボクシングの技術を熱心に学び、鋭いパンチと多彩な蹴りを組み合わせたスタイルで世界の強豪と渡り合いました。ストイックな練習と節制を続けたことでも知られ、2009年の大晦日に行われた引退試合では、強豪アンディ・サワーに勝利して現役生活を締めくくりました。「パンチを磨くことが蹴りを生かす」。ボクシングとキックの両方を練習する私たちにとって、大きなヒントになる歩みです。"},
+  {tag:"トレーニング",title:"フォームが先、スピードは後",body:"ボクササイズを始めたばかりのころは、つい速く、強く打ちたくなります。でも、上達の近道は「ゆっくり正しく」から。崩れたフォームのまま回数を重ねると、その動きが体に染みついてしまい、あとから直すのが大変になります。まずは鏡の前で、ジャブとストレートを1発ずつ、足の位置、腰の回転、拳の戻しを確認しながら打ってみましょう。正しい動きができるようになれば、スピードは自然に上がっていきます。肩や肘、膝を痛めにくくなるのも大きなメリット。今日のコンビネーションも、最初の1ラウンドは7割の力で丁寧に。速さは2ラウンド目からで十分です。"},
+  {tag:"キックボクシング",title:"ミドルキックは軸足で蹴る",body:"ミドルキックは、相手の腕やわき腹を狙う中段の回し蹴り。ムエタイで特に重視される技で、ガードの上からでも腕にダメージを蓄積させられます。威力を生むポイントは、軸足のつま先をしっかり外に向けて腰を回すこと。軸足が正面を向いたままだと腰が回らず、脚だけで蹴る形になってしまいます。蹴る瞬間は、蹴り足と同じ側の腕を後ろに振ると回転が助けられ、バランスも取りやすくなります。当てるのは足の甲ではなく、すねの下の方。蹴り終わったら素早く足を戻し、元の構えに戻るまでがひとつの技だと考えましょう。最初はゆっくり、軸足が回っているかを確かめながら10本ずつ。慣れてきたらスピードを上げましょう。"},
+  {tag:"歴史",title:"ファイティング原田のラッシュ",body:"ファイティング原田は、1962年に世界フライ級王座を獲得し、1965年には「黄金のバンタム」と呼ばれた強豪エデル・ジョフレを破って世界バンタム級王者となりました。日本人初の2階級制覇です。最大の武器は、休むことなくパンチを出し続ける回転力と、驚異的なスタミナ。そのラッシュは、テレビの前の多くの人を熱狂させました。階級も王座の数も今よりずっと少なかった時代に、2つの階級で頂点に立ったことの価値は計り知れません。最終ラウンドまで手を止めない姿勢は、今日のラウンドの最後の30秒にも生かせそうです。ラスト10秒の拍子木が鳴ったら、原田のつもりで出し切りましょう。"},
+  {tag:"体のケア",title:"水分補給はインターバルで",body:"汗をたくさんかくボクササイズでは、水分補給が欠かせません。体の水分が失われると、集中力や持久力が落ち、足もつりやすくなります。のどが渇いたと感じたときには、すでに水分が不足し始めているので、ラウンド間のインターバルに少しずつ飲むのがおすすめです。一度に大量に飲むとお腹が重くなり、動きにくくなります。たくさん汗をかく日は、水だけでなく塩分も補給できるスポーツドリンクや経口補水液を取り入れるとよいでしょう。運動前にコップ1杯の水を飲んでおくのも効果的。練習前後に体重を測ってみると、どれだけ汗をかいたかがよくわかります。"},
+  {tag:"テクニック",title:"ディフェンスは攻撃の始まり",body:"ボクシングでは「打たせずに打つ」が理想とされます。ダッキング（膝を曲げて頭を沈める）、ウィービング（頭をU字に動かしてフックをくぐる）、スウェー（上体を後ろに反らす）、パリー（相手のパンチを手ではじく）。こうした防御は、ただ身を守るためだけのものではありません。相手のパンチをかわした瞬間は、相手の体勢が崩れ、ガードが空く絶好のチャンス。そこで打ち返すのが「カウンター」や「リターン」です。今日のメニューにディフェンス入りのコンビネーションがあれば、かわす動きと返しのパンチを、ひと続きの流れとして練習してみましょう。"},
+  {tag:"選手エピソード",title:"村田諒太、48年ぶりの金",body:"村田諒太は、2012年のロンドン五輪ボクシング男子ミドル級で金メダルを獲得しました。日本人の五輪ボクシング金メダルは、1964年東京五輪の桜井孝雄以来、48年ぶりの快挙です。その後プロに転向し、2017年にWBA世界ミドル級王者に。ミドル級は世界的に層が厚く、日本人にとっては非常に高い壁とされてきた階級です。村田の武器は、固いガードで前に出て相手を追い詰め、右ストレートを打ち込むスタイル。読書家としても知られ、言葉でボクシングを語れる王者として多くのファンを持ちました。ガードを固めて前進する姿は、基本の大切さを改めて教えてくれます。"},
+  {tag:"トレーニング",title:"パンチは足で打つ",body:"パンチは腕で打つもの――と思いがちですが、威力の源は下半身にあります。床を蹴った力が足首、膝、腰、肩と順番に伝わり、最後に拳から放たれる。この「運動連鎖」がうまくつながると、力まなくても重いパンチになります。だからこそ、ボクサーはランニングやスクワットで脚を鍛えるのです。ボクササイズでも、ストレートを打つときに後ろ足のかかとを返す、フックで前足をひねる、といった足の動きを意識してみてください。脚やお尻の大きな筋肉を使うことで消費エネルギーも増え、引き締め効果も高まります。腕が疲れてきたときこそ、足から打つ意識を思い出しましょう。"},
+  {tag:"キックボクシング",title:"膝蹴りは腰で刺す",body:"膝蹴りは、接近戦で威力を発揮するキックボクシングならではの技です。相手が頭を下げて近づいてきたときや、首相撲で組み合ったときに、腹部や顔面を狙います。ムエタイでは膝蹴りが非常に重視され、膝を主体に戦うタイプの選手もいるほどです。打つときは、膝を真上に突き上げるのではなく、腰を前に押し出すようにして、膝の先端を相手に突き刺すイメージで。軸足のかかとを少し浮かせると、体が伸び上がって力が乗ります。ボクササイズでは、両手で相手の首をつかむつもりで構え、左右交互に膝を引き上げるだけでも、腹筋と体幹にしっかり効きます。背中が丸まらないよう、胸を張って打つのがポイントです。"},
+  {tag:"選手エピソード",title:"ロマチェンコとダンス",body:"ウクライナのワシル・ロマチェンコは、アマチュアで五輪2大会連続の金メダルを獲得し、プロではわずか3戦目で世界王座を手にした選手です。彼の代名詞は、相手の横に回り込む独特のフットワーク。パンチを打ちながら前足を軸にくるりと回り（ピボット）、相手が向き直る前に死角から打ち込みます。そのフットワークの土台には、子どものころに父の勧めで習った伝統舞踊の経験があると言われています。一見ボクシングと関係なさそうな練習が、世界一の武器につながった好例です。ボクササイズでも、パンチのあとに一歩横へ動くだけで、ぐっと実戦的な動きになります。"},
+  {tag:"テクニック",title:"ストレートは「かかとを返す」",body:"ワンツーの「ツー」、右ストレートは、ボクシングで最も強力なパンチのひとつです。威力の秘密は後ろ足のかかと。打つ瞬間に後ろ足のかかとを外側に返し、膝・腰・肩を一気に前へ回転させることで、体重が拳に乗ります。このとき、上体が前に突っ込みすぎないよう、頭は前足の膝より前に出さないのがポイント。腕は伸ばし切って肘をロックせず、わずかにゆとりを残したところで止めて、すぐに戻します。肘を伸ばし切る打ち方を続けると、関節を痛める原因にもなるからです。打ち終わりに左手のガードがあごの横にあるか、毎回確認しましょう。今日は、ワンツーの「ツー」だけを10本、かかとの向きを見ながら打ってみましょう。"},
+  {tag:"選手エピソード",title:"具志堅用高とサウスポー",body:"具志堅用高は1976年にWBA世界ライトフライ級王座を獲得し、13度の連続防衛を果たした、日本ボクシング史に残る名王者です。沖縄県石垣島の出身で、ニックネームは島に生息する鳥にちなんだ「カンムリワシ」。サウスポーの構えから繰り出す鋭い左ストレートと、相手に休む隙を与えない連打が持ち味でした。サウスポーは右手と右足が前の構えで、右構えの相手とは前足の位置取りの争いになり、相手の前足の外側を取ったほうが有利とされます。ボクササイズでも、ときには構えを左右逆にして練習すると、体の左右差の解消やバランスの改善に役立ちます。"}
+];
+const columnFor=k=>COLUMNS[((dayNum(k)%COLUMNS.length)+COLUMNS.length)%COLUMNS.length];
+
+/* ===== ストリーク ===== */
+function streakInfo(){
+  const t=TODAY(); let k=st.done[t]?t:addDays(t,-1), cur=0;
+  while(st.done[k]){ cur++; k=addDays(k,-1); }
+  const days=Object.keys(st.done).filter(x=>st.done[x]).sort(); let best=0, run=0, prev=null;
+  days.forEach(d=>{ run=prev&&addDays(prev,1)===d?run+1:1; best=Math.max(best,run); prev=d; });
+  return {cur,best,total:days.length,today:!!st.done[t]};
+}
+function setDone(k,v){ if(v) st.done[k]=true; else delete st.done[k]; save(); renderHeader(); renderMenu(); renderHist(); }
+
+/* ===== 描画：ヘッダー ===== */
+function renderHeader(){
+  const t=TODAY(), d=fromKey(t), s=streakInfo();
+  $("dateSub").textContent=`${d.getFullYear()} · ${["SUN","MON","TUE","WED","THU","FRI","SAT"][d.getDay()]}`;
+  $("dateBig").textContent=`${d.getMonth()+1}月${d.getDate()}日（${WD[d.getDay()]}）`;
+  $("streakNum").textContent=s.cur;
+  $("streakBox").classList.toggle("hot",s.cur>=3);
+  $("streakNote").textContent=s.today?"今日は消化済み":s.cur?`今日やれば${s.cur+1}日連続`:"今日から始めよう";
+  let h=""; for(let i=13;i>=0;i--){ const k=addDays(t,-i); h+=`<i class="${st.done[k]?"on":""}${i===0?" now":""}" title="${shortDate(k)}"></i>`; }
+  $("strip").innerHTML=h;
+}
+
+/* ===== 描画：今日のメニュー ===== */
+const WARMUP="その場ジャンプ（縄跳びのつもりで）2分 → 肩・股関節・足首のストレッチ → 軽いシャドー 1分";
+const COOL="ゆっくり歩いて呼吸を整える → 肩・ふくらはぎ・太もものストレッチ 5分";
+function roundsHTML(ids,active){
+  return `<ol class="rounds">${ids.map((id,i)=>{ const c=byId(id); return `<li class="rd${active===i+1?" on":""}">
+    <div class="rd-no">${i+1}<small>R</small></div>
+    <div class="rd-name"><span class="kind ${c.cat}">${c.cat==="kick"?"キック":"ボクシング"}</span>${esc(c.name)}</div>
+    ${stepsHTML(c.moves)}
+    ${ytHTML(c.q)}
+  </li>`; }).join("")}</ol>`;
+}
+function renderMenu(){
+  const t=TODAY(), mn=menuFor(t), s=streakInfo();
+  $("menuCard").innerHTML=`
+    <p class="mn-theme">${esc(mn.theme.name)}</p>
+    <p class="mn-focus">${esc(mn.theme.focus)}</p>
+    <div class="mn-sec"><b>WARM UP</b><p>${WARMUP}</p></div>
+    <div class="mn-sec"><b>ROUNDS（${mn.rounds.length}R）</b>${roundsHTML(mn.rounds,T.menu&&T.phase!=="idle"&&T.phase!=="done"?T.round:0)}</div>
+    <div class="mn-sec"><b>FINISHER</b><p>${esc(mn.theme.finisher)}</p></div>
+    <div class="mn-sec"><b>COOL DOWN</b><p>${COOL}</p></div>
+    <button class="done-btn" id="doneBtn" aria-pressed="${s.today}">${s.today?"✓ 今日のメニュー消化済み":"今日のメニューを消化した！"}</button>
+    <div class="row-btns"><button class="ghost" id="menuTimer">このメニューでタイマー（${mn.rounds.length}R）</button></div>`;
+  $("doneBtn").onclick=()=>{ const v=!st.done[t]; setDone(t,v); if(v){ const n=streakInfo().cur; toast(n>1?`${n}日連続！ナイスファイト`:"おつかれさま！記録しました"); } };
+  $("menuTimer").onclick=()=>{ useMenuTimer(); document.getElementById("sTimer").scrollIntoView({behavior:"smooth"}); };
+}
+
+/* ===== 描画：コラム ===== */
+function renderCol(){
+  const c=columnFor(TODAY());
+  $("colCard").innerHTML=`<span class="col-tag">${esc(c.tag)}</span><h3 class="col-title">${esc(c.title)}</h3><p class="col-body">${esc(c.body)}</p><p class="col-foot">毎日0時に新しいコラムに変わります</p>`;
+}
+
+/* ===== コンビ一覧 ===== */
+let filter="all";
+const FILTERS=[["all","すべて"],["box","ボクシング"],["kick","キックボクシング"],["fav","★ お気に入り"],["mine","クラス記録"]];
+function renderFilters(){
+  $("filters").innerHTML=FILTERS.map(([k,t])=>`<button data-f="${k}" aria-pressed="${filter===k}">${t}</button>`).join("");
+  $("filters").querySelectorAll("button").forEach(b=>b.onclick=()=>{ filter=b.dataset.f; renderFilters(); renderCombos(); });
+}
+function comboHTML(c){
+  const fav=st.favs.includes(c.id);
+  const kind=c.mine?`<span class="kind mine">クラス</span>`:`<span class="kind ${c.cat}">${c.cat==="kick"?"キック":"ボクシング"}</span>`;
+  const sub=c.mine?`${shortDate(c.date)} の記録`:`<span class="lv">${"★".repeat(c.lv)}${"☆".repeat(3-c.lv)}</span>`;
+  return `<li class="combo">
+    <div class="c-top">${kind}<div class="c-name">${esc(c.name)}<small>${sub}　<span class="nota">${esc(notation(c.moves))}</span></small></div>
+      <button class="fav" data-fav="${esc(c.id)}" aria-pressed="${fav}" aria-label="お気に入り">★</button></div>
+    ${stepsHTML(c.moves)}
+    ${c.tip?`<p class="c-tip">${esc(c.tip)}</p>`:""}
+    <div class="c-acts">${ytHTML(c.q)}${c.mine?`<button class="del" data-del="${esc(c.id)}">削除</button>`:""}</div>
+  </li>`;
+}
+function renderCombos(){
+  const all=[...COMBOS,...recCombos()];
+  const list=all.filter(c=>filter==="all"||(filter==="fav"?st.favs.includes(c.id):filter==="mine"?c.mine:c.cat===filter&&!c.mine));
+  const empty={fav:"★を押すと、ここにお気に入りが集まります。",mine:"まだクラスの記録はありません。下の「クラスで習ったコンビを記録」から追加できます。"}[filter]||"該当するコンビネーションはありません。";
+  $("combos").innerHTML=list.length?list.map(comboHTML).join(""):`<li class="empty">${empty}</li>`;
+}
+document.addEventListener("click",e=>{
+  const f=e.target.closest("[data-fav]");
+  if(f){ const id=f.dataset.fav, i=st.favs.indexOf(id); if(i>=0) st.favs.splice(i,1); else st.favs.push(id); save();
+    document.querySelectorAll(`[data-fav="${CSS.escape(id)}"]`).forEach(b=>b.setAttribute("aria-pressed",i<0));
+    toast(i<0?"お気に入りに追加しました":"お気に入りから外しました"); if(filter==="fav") renderCombos(); return; }
+  const d=e.target.closest("[data-del]");
+  if(d){ const r=st.recs.find(x=>x.id===d.dataset.del); if(!r||!confirm(`「${r.name}」を削除しますか？`)) return;
+    st.recs=st.recs.filter(x=>x.id!==r.id); st.favs=st.favs.filter(x=>x!==r.id); save(); renderCombos(); renderHist(); toast("削除しました"); }
+});
+
+/* ===== クラス記録（音声入力） ===== */
+let recMoves=[];
+function renderPreview(){
+  recMoves=parseCombo($("recText").value);
+  $("recPrev").innerHTML=recMoves.length
+    ?`<ol>${recMoves.map((m,i)=>`<li><span class="ord">${i+1}.</span><span class="st ${cls(m)}"><b>${esc(badge(m))}</b>${esc(label(m))}</span><button class="x" data-rm="${i}" aria-label="${i+1}番目を消す">×</button></li>`).join("")}</ol><div class="nota">${esc(notation(recMoves))}</div>`
+    :`<p class="ph">認識した技がここに番号付きで並びます</p>`;
+  $("recSave").disabled=!recMoves.length;
+  $("recPrev").querySelectorAll("[data-rm]").forEach(b=>b.onclick=()=>{ recMoves.splice(+b.dataset.rm,1); $("recText").value=recMoves.map(label).map(x=>x.replace("（すねで受ける）","")).join("、"); renderPreview(); });
+}
+$("recText").addEventListener("input",renderPreview);
+$("recClear").onclick=()=>{ $("recText").value=""; $("recName").value=""; $("recMemo").value=""; renderPreview(); };
+$("recSave").onclick=()=>{
+  if(!recMoves.length) return;
+  const t=TODAY(), n=st.recs.filter(r=>r.date===t).length+1, d=fromKey(t);
+  const name=$("recName").value.trim()||`${d.getMonth()+1}/${d.getDate()} クラス #${n}`;
+  const id="r"+Date.now().toString(36);
+  st.recs.unshift({id,date:t,name,raw:$("recText").value.trim(),moves:recMoves,memo:$("recMemo").value.trim()});
+  save(); $("recClear").onclick(); renderCombos(); renderHist();
+  toast(`「${name}」を保存しました`);
+};
+(function setupMic(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition, btn=$("micBtn"), stl=$("micSt");
+  if(!SR){ btn.disabled=true; btn.style.opacity=.4; stl.textContent="このブラウザは音声認識に未対応です。キーボードのマイクボタンで音声入力して、上の欄に入れてもOKです。"; return; }
+  let rec=null, on=false, base="";
+  btn.onclick=()=>{
+    if(on){ rec.stop(); return; }
+    rec=new SR(); rec.lang="ja-JP"; rec.interimResults=true; rec.continuous=true; rec.maxAlternatives=1;
+    base=$("recText").value.trim();
+    rec.onstart=()=>{ on=true; btn.classList.add("on"); btn.setAttribute("aria-label","音声入力を止める"); stl.textContent="聞いています…終わったらもう一度押す"; };
+    rec.onresult=e=>{
+      let fin="", tmp="";
+      for(let i=0;i<e.results.length;i++){ const r=e.results[i]; if(r.isFinal) fin+=(fin?"、":"")+r[0].transcript; else tmp+=r[0].transcript; }
+      $("recText").value=[base,fin,tmp].filter(Boolean).join("、");
+      renderPreview();
+      stl.textContent=tmp?`…${tmp}`:"聞いています…終わったらもう一度押す";
+    };
+    rec.onerror=e=>{ stl.textContent=e.error==="not-allowed"||e.error==="service-not-allowed"?"マイクの使用が許可されていません。設定から許可してください。":e.error==="no-speech"?"声が聞き取れませんでした。もう一度どうぞ。":"音声認識でエラーが起きました（"+e.error+"）"; };
+    rec.onend=()=>{ on=false; btn.classList.remove("on"); btn.setAttribute("aria-label","音声入力を開始"); if(stl.textContent.startsWith("聞いて")||stl.textContent.startsWith("…")) stl.textContent=recMoves.length?`${recMoves.length}個の技を認識しました。内容を確認して保存してください。`:"技が認識できませんでした。もう一度話すか、欄に入力してください。"; };
+    try{ rec.start(); }catch(e){ stl.textContent="音声認識を開始できませんでした"; }
+  };
+})();
+$("dictBody").innerHTML=[
+  ["パンチ","ジャブ／ストレート／左・右フック／左・右アッパー／ワンツー／1〜6の数字・ワン〜シックス"],
+  ["ボディ","「左ボディ」「ボディストレート」「右ボディアッパー」など"],
+  ["キック","左・右 ミドル／ロー／ハイ／インロー／カーフ／前蹴り（ティープ）／スイッチキック"],
+  ["膝・肘","ヒザ（膝蹴り・テンカオ）／ヒジ（エルボー）"],
+  ["守り","ダッキング／ウィービング／スウェー／パリー／ブロック／カット（チェック）／ステップ／ピボット／首相撲"],
+  ["その他","「ダブルジャブ」は2回、「左右の指定なし」は利き手の構え（オーソドックス）で整理します"]
+].map(([a,b])=>`<tr><td>${a}</td><td>${b}</td></tr>`).join("");
+
+/* ===== ラウンドタイマー ===== */
+const T={phase:"idle",round:0,end:0,left:0,paused:false,menu:false,lastSec:-1,wake:null};
+const PRESETS=[["3分/1分×6",180,60,6],["2分/1分×6",120,60,6],["2分/30秒×8",120,30,8],["1分/30秒×10",60,30,10]];
+const PREP=10;
+const fmt=s=>`${Math.floor(s/60)}:${pad(s%60)}`;
+function renderTimerSettings(){
+  const w=st.timer, busy=T.phase!=="idle"&&T.phase!=="done";
+  $("presets").innerHTML=PRESETS.map(([t,a,b,c],i)=>`<button data-p="${i}" aria-pressed="${!T.menu&&w.work===a&&w.rest===b&&w.rounds===c}" ${busy?"disabled":""}>${t}</button>`).join("")+`<button data-p="menu" aria-pressed="${T.menu}" ${busy?"disabled":""}>今日のメニュー</button>`;
+  $("presets").querySelectorAll("button").forEach(b=>b.onclick=()=>{ if(b.dataset.p==="menu") useMenuTimer(); else { const p=PRESETS[+b.dataset.p]; st.timer={work:p[1],rest:p[2],rounds:p[3]}; T.menu=false; save(); } resetTimer(); });
+  const S=[["work","ラウンド",30,60,600,fmt],["rest","休憩",15,15,180,fmt],["rounds","ラウンド数",1,1,20,v=>v+"R"]];
+  $("steppers").innerHTML=S.map(([k,t,step,min,max,f])=>`<div class="stp"><label>${t}</label><div><button data-k="${k}" data-d="${-step}" aria-label="${t}を減らす" ${busy?"disabled":""}>−</button><output>${f(w[k])}</output><button data-k="${k}" data-d="${step}" aria-label="${t}を増やす" ${busy?"disabled":""}>＋</button></div></div>`).join("");
+  $("steppers").querySelectorAll("button").forEach(b=>b.onclick=()=>{ const s=S.find(x=>x[0]===b.dataset.k); w[s[0]]=Math.min(s[4],Math.max(s[3],w[s[0]]+ +b.dataset.d)); if(s[0]==="rounds") T.menu=false; save(); resetTimer(); });
+}
+function useMenuTimer(){ const mn=menuFor(TODAY()); st.timer={work:180,rest:60,rounds:mn.rounds.length}; T.menu=true; save(); resetTimer(); }
+function renderTimer(){
+  const w=st.timer, p=T.phase;
+  const sec=p==="idle"?w.work:p==="done"?0:Math.max(0,Math.ceil(T.left/1000));
+  $("tTime").textContent=fmt(sec);
+  $("tTime").className="time"+(p==="rest"||p==="prep"?" rest":"")+(p==="work"&&sec<=10?" warn":"");
+  $("face").className="face "+(p==="work"||p==="rest"||p==="prep"?p:"");
+  $("tPhase").textContent=p==="idle"?"READY":p==="prep"?"まもなく開始":p==="work"?`ROUND ${T.round} / ${w.rounds}`:p==="rest"?`休憩 → 次は ROUND ${T.round+1}`:"おつかれさま！全ラウンド終了";
+  let h=""; for(let i=1;i<=w.rounds;i++) h+=`<i class="${i<T.round||(p==="done")?"done":i===T.round&&p==="work"?"now":""}"></i>`;
+  $("tPips").innerHTML=h;
+  $("tMain").textContent=p==="idle"||p==="done"?"スタート":T.paused?"再開":"一時停止";
+  // 今日のメニューで回しているときは、今/次のラウンドのコンビを表示
+  let cue="";
+  if(T.menu){ const ids=menuFor(TODAY()).rounds; const n=p==="rest"?T.round+1:p==="prep"||p==="idle"?1:T.round; const c=byId(ids[n-1]);
+    if(c&&p!=="done") cue=`<div>${p==="work"?"このラウンド":"次のラウンド"}：<b>${esc(c.name)}</b></div>${stepsHTML(c.moves)}`; }
+  if(p==="done"&&!st.done[TODAY()]) cue=`<button class="ghost" id="tDone" style="max-width:260px">今日のメニューを消化済みにする</button>`;
+  $("tCue").innerHTML=cue;
+  const td=$("tDone"); if(td) td.onclick=()=>{ setDone(TODAY(),true); toast(`${streakInfo().cur}日連続！`); renderTimer(); };
+}
+/* 音：Web Audio でゴング・拍子木・ビープを合成 */
+let ac=null;
+function audioOn(){ try{ if(!ac){ const C=window.AudioContext||window.webkitAudioContext; if(C) ac=new C(); } if(ac&&ac.state==="suspended") ac.resume(); }catch(e){} }
+function tone(f,dur,at=0,type="sine",vol=.35){
+  if(!ac||!st.sound) return; const t=ac.currentTime+at, o=ac.createOscillator(), g=ac.createGain();
+  o.type=type; o.frequency.value=f; g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+.008); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t+dur+.05);
+}
+const gong=(at=0)=>{ [[880,1.6,.3],[1320,1.1,.16],[2210,.7,.1],[3150,.4,.05]].forEach(([f,d,v])=>tone(f,d,at,"sine",v)); };
+const SND={
+  start:()=>{ gong(0); gong(.42); gong(.84); },
+  end:()=>{ gong(0); },
+  finish:()=>{ gong(0); gong(.42); gong(.84); gong(1.6); },
+  clap:()=>{ tone(2400,.05,0,"square",.25); tone(2400,.05,.16,"square",.25); },
+  tick:()=>tone(1000,.12,0,"sine",.3),
+  go:()=>tone(1500,.35,0,"sine",.35)
+};
+function say(t){ if(!st.voice||!("speechSynthesis" in window)) return; try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(t); u.lang="ja-JP"; u.rate=1.1; speechSynthesis.speak(u); }catch(e){} }
+const buzz=p=>{ try{ navigator.vibrate&&navigator.vibrate(p); }catch(e){} };
+async function wake(on){ try{ if(on&&"wakeLock" in navigator&&!T.wake){ T.wake=await navigator.wakeLock.request("screen"); T.wake.addEventListener("release",()=>{ T.wake=null; }); } else if(!on&&T.wake){ await T.wake.release(); T.wake=null; } }catch(e){} }
+function enter(phase,secs){ T.phase=phase; T.end=performance.now()+secs*1000; T.left=secs*1000; T.lastSec=-1; }
+function startWork(){
+  enter("work",st.timer.work); SND.start(); buzz([300,100,300]);
+  if(T.menu){ const c=byId(menuFor(TODAY()).rounds[T.round-1]); if(c) say(`ラウンド${T.round}、${c.moves.map(label).join("、").replace("（すねで受ける）","")}`); }
+  else say(`ラウンド${T.round}`);
+}
+function next(){
+  const w=st.timer;
+  if(T.phase==="prep"){ startWork(); }
+  else if(T.phase==="work"){
+    if(T.round>=w.rounds){ T.phase="done"; SND.finish(); buzz([500,150,500]); say("全ラウンド終了。おつかれさまでした"); wake(false); }
+    else { enter("rest",w.rest); SND.end(); buzz(400); say("休憩"); }
+  }
+  else if(T.phase==="rest"){ T.round++; startWork(); }
+  renderTimer(); if(T.menu) renderMenu();
+}
+function tick(){
+  if(T.phase==="idle"||T.phase==="done"||T.paused) return;
+  T.left=T.end-performance.now();
+  const s=Math.ceil(T.left/1000);
+  if(T.left<=0){ next(); return; }
+  if(s!==T.lastSec){ T.lastSec=s;
+    if(T.phase==="work"&&s===10){ SND.clap(); }
+    if((T.phase==="rest"||T.phase==="prep")&&s<=3) SND.tick();
+    renderTimer();
+  }
+}
+function resetTimer(){ T.phase="idle"; T.round=0; T.paused=false; wake(false); renderTimerSettings(); renderTimer(); renderMenu(); }
+$("tMain").onclick=()=>{
+  audioOn();
+  if(T.phase==="idle"||T.phase==="done"){ T.round=1; T.paused=false; enter("prep",PREP); say("まもなく開始します"); wake(true); renderTimerSettings(); renderMenu(); }
+  else if(T.paused){ T.paused=false; T.end=performance.now()+T.left; wake(true); }
+  else { T.paused=true; T.left=T.end-performance.now(); }
+  renderTimer();
+};
+$("tSkip").onclick=()=>{ if(T.phase==="idle"||T.phase==="done") return; audioOn(); T.paused=false; next(); };
+$("tReset").onclick=resetTimer;
+$("optSound").checked=st.sound!==false; $("optVoice").checked=st.voice!==false;
+$("optSound").onchange=e=>{ st.sound=e.target.checked; save(); };
+$("optVoice").onchange=e=>{ st.voice=e.target.checked; save(); };
+setInterval(tick,200);
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible"&&T.phase!=="idle"&&T.phase!=="done"&&!T.paused) wake(true); });
+
+/* ===== 履歴 ===== */
+let histTab="col", histDays=14;
+const HTABS=[["col","コラム"],["menu","メニュー"],["rec","クラス記録"]];
+function renderHist(){
+  const s=streakInfo();
+  $("stats").innerHTML=`<div class="stat"><b>${s.cur}</b><span>連続日数</span></div><div class="stat"><b>${s.best}</b><span>最長記録</span></div><div class="stat"><b>${s.total}</b><span>合計消化日</span></div>`;
+  $("histTabs").innerHTML=HTABS.map(([k,t])=>`<button data-h="${k}" aria-pressed="${histTab===k}">${t}</button>`).join("");
+  $("histTabs").querySelectorAll("button").forEach(b=>b.onclick=()=>{ histTab=b.dataset.h; histDays=14; renderHist(); });
+  const t=TODAY(), days=[...Array(histDays)].map((_,i)=>addDays(t,-i));
+  let h="";
+  if(histTab==="col"){
+    h=days.map(k=>{ const c=columnFor(k); return `<details><summary><span class="d">${shortDate(k)}</span><span class="t">${esc(c.title)}<small>${esc(c.tag)}</small></span></summary><div class="in"><p class="col-body">${esc(c.body)}</p></div></details>`; }).join("");
+  }else if(histTab==="menu"){
+    h=days.map(k=>{ const mn=menuFor(k), ok=!!st.done[k]; return `<details><summary><span class="d">${shortDate(k)}</span><span class="t">${esc(mn.theme.name)}<small>${mn.rounds.map(id=>byId(id).name).join(" / ")}</small></span>${ok?'<span class="ok">✓ 消化</span>':'<span class="ng">—</span>'}</summary><div class="in">${roundsHTML(mn.rounds,0)}<p class="note">FINISHER：${esc(mn.theme.finisher)}</p><button class="chk" data-done="${k}">${ok?"消化済みを取り消す":"この日を消化済みにする"}</button></div></details>`; }).join("");
+  }else{
+    const recs=recCombos();
+    h=recs.length?recs.map(c=>`<details><summary><span class="d">${shortDate(c.date)}</span><span class="t">${esc(c.name)}<small class="nota">${esc(notation(c.moves))}</small></span></summary><div class="in"><ol class="steps" style="flex-direction:column;align-items:flex-start;gap:4px">${c.moves.map((m,i)=>`<li><span class="nota" style="color:var(--gold)">${i+1}.</span> <span class="st ${cls(m)}"><b>${esc(badge(m))}</b>${esc(label(m))}</span></li>`).join("")}</ol>${c.tip?`<p class="c-tip">メモ：${esc(c.tip)}</p>`:""}${c.raw?`<p class="note">聞き取り：「${esc(c.raw)}」</p>`:""}<div class="c-acts" style="margin-top:8px">${ytHTML(c.q)}<button class="fav" data-fav="${esc(c.id)}" aria-pressed="${st.favs.includes(c.id)}" aria-label="お気に入り" style="margin:0">★</button><button class="del" data-del="${esc(c.id)}">削除</button></div></div></details>`).join("")
+      :`<p class="empty">クラスで習ったコンビを記録すると、日付ごとにここに並びます。</p>`;
+  }
+  $("hist").innerHTML=h+(histTab!=="rec"&&histDays<120?`<button class="more" id="histMore">さらに前を見る</button>`:"");
+  const mo=$("histMore"); if(mo) mo.onclick=()=>{ histDays+=30; renderHist(); };
+  $("hist").querySelectorAll("[data-done]").forEach(b=>b.onclick=()=>{ const k=b.dataset.done; setDone(k,!st.done[k]); });
+}
+
+/* ===== 起動 ===== */
+function renderAll(){ renderHeader(); renderMenu(); renderCol(); renderFilters(); renderCombos(); renderPreview(); renderTimerSettings(); renderTimer(); renderHist(); }
+renderAll();
+// 日付が変わったら、メニューとコラムを差し替える
+let shown=TODAY();
+setInterval(()=>{ if(TODAY()!==shown){ shown=TODAY(); if(T.phase==="idle"||T.phase==="done") renderAll(); } },30000);
+if("serviceWorker" in navigator&&location.protocol!=="file:"){
+  window.addEventListener("load",()=>navigator.serviceWorker.register("../sw.js").catch(()=>{}));
+}
+</script>
+</body>
+</html>
